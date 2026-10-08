@@ -29,4 +29,32 @@ object Emi {
             ScheduleRow(m, principalPart, interest, balance)
         }
     }
+
+    /** Keeps the EMI fixed; a one-time [prepayment] after month [atMonth] shortens the schedule. */
+    fun scheduleWithPrepayment(
+        principal: Double, annualRatePercent: Double, months: Int,
+        prepayment: Double, atMonth: Int,
+    ): List<ScheduleRow> {
+        require(prepayment >= 0) { "Prepayment cannot be negative" }
+        require(atMonth in 1..months) { "Prepayment month must be within the tenure" }
+        val emi = calculate(principal, annualRatePercent, months).monthlyEmi
+        val r = annualRatePercent / 12 / 100
+        var balance = principal
+        val rows = mutableListOf<ScheduleRow>()
+        for (m in 1..months) {
+            val interest = balance * r
+            var principalPart = (emi - interest).coerceAtMost(balance)
+            if (m == atMonth) principalPart = (principalPart + prepayment).coerceAtMost(balance)
+            balance = if (m == months || balance - principalPart < 1e-6) 0.0 else balance - principalPart
+            rows.add(ScheduleRow(m, principalPart, interest, balance))
+            if (balance == 0.0) break
+        }
+        return rows
+    }
+
+    fun interestSaved(
+        principal: Double, annualRatePercent: Double, months: Int,
+        prepayment: Double, atMonth: Int,
+    ): Double = schedule(principal, annualRatePercent, months).sumOf { it.interest } -
+        scheduleWithPrepayment(principal, annualRatePercent, months, prepayment, atMonth).sumOf { it.interest }
 }
