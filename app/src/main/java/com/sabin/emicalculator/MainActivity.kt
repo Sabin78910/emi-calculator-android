@@ -26,8 +26,9 @@ fun EmiScreen() {
     var principal by remember { mutableStateOf("500000") }
     var rate by remember { mutableStateOf("12") }
     var months by remember { mutableStateOf("60") }
+    var unit by remember { mutableStateOf(TenureUnit.MONTHS) }
 
-    val p = principal.toDoubleOrNull(); val r = rate.toDoubleOrNull(); val n = months.toIntOrNull()
+    val p = principal.toDoubleOrNull(); val r = rate.toDoubleOrNull(); val n = unit.parseToMonths(months)
     val result = runCatching { Emi.calculate(p!!, r!!, n!!) }.getOrNull()
     val schedule = if (result != null) Emi.schedule(p!!, r!!, n!!) else emptyList()
 
@@ -36,13 +37,18 @@ fun EmiScreen() {
             listOf(
                 Triple("Loan amount (NPR)", principal) { v: String -> principal = v },
                 Triple("Interest rate (% per year)", rate) { v: String -> rate = v },
-                Triple("Tenure (months)", months) { v: String -> months = v },
+                Triple("Tenure (${unit.label.lowercase()})", months) { v: String -> months = v },
             ).forEach { (label, value, onChange) ->
                 OutlinedTextField(
                     value, onChange, label = { Text(label) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                 )
+            }
+            Row(Modifier.padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TenureUnit.values().forEach { u ->
+                    FilterChip(selected = unit == u, onClick = { unit = u }, label = { Text(u.label) })
+                }
             }
             if (result == null) {
                 Text("Enter valid positive values", color = MaterialTheme.colorScheme.error)
