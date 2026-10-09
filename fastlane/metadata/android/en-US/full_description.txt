@@ -1,0 +1,18 @@
+EMI Calculator shows your monthly loan installment, total interest and full repayment schedule instantly.
+
+FEATURES
+• Monthly EMI from loan amount, interest rate and tenure
+• Tenure in months or years
+• Total interest and total payment
+• Month-by-month amortization schedule
+• Prepayment: see how much interest a lump-sum payment saves
+• Compare two loan offers side by side
+• Remembers your last inputs
+
+PRIVATE BY DESIGN
+• Works fully offline: no internet permission
+• No account, no ads, no tracking
+
+Results are estimates for planning. Confirm final figures with your lender.
+
+Privacy policy: https://sabin78910.github.io/privacy-policy/#emi-calculator

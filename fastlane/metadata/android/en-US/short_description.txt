@@ -1,0 +1,1 @@
+Calculate loan EMI, total interest and the full repayment schedule instantly.
