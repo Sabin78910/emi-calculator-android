@@ -45,7 +45,17 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         setContent {
-            EmiTheme { EmiScreen() }
+            EmiTheme {
+                val prefs = remember { getSharedPreferences(Onboarding.PREFS, Context.MODE_PRIVATE) }
+                var onboarding by remember {
+                    mutableStateOf(Onboarding.shouldShow(prefs.getBoolean(Onboarding.KEY_DONE, false)))
+                }
+                if (onboarding) {
+                    OnboardingScreen { onboarding = false }
+                } else {
+                    EmiScreen()
+                }
+            }
         }
     }
 }
@@ -337,7 +347,7 @@ private fun ScheduleRowView(cells: List<String>, bold: Boolean = false, descript
 }
 
 @Composable
-private fun SliderField(
+internal fun SliderField(
     label: String, value: String, range: SliderRange, decimals: Int, onChange: (String) -> Unit,
 ) {
     Column(Modifier.padding(bottom = 8.dp)) {
