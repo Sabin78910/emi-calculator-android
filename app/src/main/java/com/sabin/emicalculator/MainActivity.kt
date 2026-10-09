@@ -32,6 +32,15 @@ fun EmiScreen() {
     val result = runCatching { Emi.calculate(p!!, r!!, n!!) }.getOrNull()
     val schedule = if (result != null) Emi.schedule(p!!, r!!, n!!) else emptyList()
 
+    var compare by remember { mutableStateOf(false) }
+    var principal2 by remember { mutableStateOf("500000") }
+    var rate2 by remember { mutableStateOf("10") }
+    var months2 by remember { mutableStateOf("60") }
+    val p2 = principal2.toDoubleOrNull(); val r2 = rate2.toDoubleOrNull(); val n2 = unit.parseToMonths(months2)
+    val comparison = if (compare) runCatching {
+        LoanComparison.compare(LoanInput(p!!, r!!, n!!), LoanInput(p2!!, r2!!, n2!!))
+    }.getOrNull() else null
+
     Scaffold(topBar = { TopAppBar(title = { Text("EMI Calculator") }) }) { padding ->
         Column(Modifier.padding(padding).padding(16.dp)) {
             listOf(
@@ -48,6 +57,36 @@ fun EmiScreen() {
             Row(Modifier.padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TenureUnit.values().forEach { u ->
                     FilterChip(selected = unit == u, onClick = { unit = u }, label = { Text(u.label) })
+                }
+            }
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Switch(checked = compare, onCheckedChange = { compare = it })
+                Spacer(Modifier.width(8.dp))
+                Text("Compare with second loan")
+            }
+            if (compare) {
+                listOf(
+                    Triple("Loan 2 amount (NPR)", principal2) { v: String -> principal2 = v },
+                    Triple("Loan 2 rate (% per year)", rate2) { v: String -> rate2 = v },
+                    Triple("Loan 2 tenure (${unit.label.lowercase()})", months2) { v: String -> months2 = v },
+                ).forEach { (label, value, onChange) ->
+                    OutlinedTextField(
+                        value, onChange, label = { Text(label) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    )
+                }
+                if (comparison != null) {
+                    Card(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text("Loan 1: EMI NPR %,.2f, interest NPR %,.2f".format(comparison.a.monthlyEmi, comparison.a.totalInterest))
+                            Text("Loan 2: EMI NPR %,.2f, interest NPR %,.2f".format(comparison.b.monthlyEmi, comparison.b.totalInterest))
+                            Text("Difference (2 − 1): EMI NPR %,.2f, interest NPR %,.2f".format(comparison.emiDifference, comparison.interestDifference),
+                                style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                } else {
+                    Text("Enter valid positive values for both loans", color = MaterialTheme.colorScheme.error)
                 }
             }
             if (result == null) {
