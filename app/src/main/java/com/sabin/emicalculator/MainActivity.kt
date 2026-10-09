@@ -10,11 +10,12 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -37,9 +38,7 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         setContent {
-            MaterialTheme(colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()) {
-                EmiScreen()
-            }
+            EmiTheme { EmiScreen() }
         }
     }
 }
@@ -94,21 +93,20 @@ fun EmiScreen() {
         LoanComparison.compare(LoanInput(p!!, r!!, n!!), LoanInput(p2!!, r2!!, n2!!))
     }.getOrNull() else null
 
-    Scaffold(topBar = { TopAppBar(title = { Text("EMI Calculator") }) }) { padding ->
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = { LargeTopAppBar(title = { Text("EMI Calculator") }, scrollBehavior = scrollBehavior) },
+    ) { padding ->
         LazyColumn(Modifier.padding(padding), contentPadding = PaddingValues(16.dp)) {
             item {
             Column {
-            listOf(
-                Triple("Loan amount (NPR)", principal) { v: String -> principal = v },
-                Triple("Interest rate (% per year)", rate) { v: String -> rate = v },
-                Triple("Tenure (${unit.label.lowercase()})", months) { v: String -> months = v },
-            ).forEach { (label, value, onChange) ->
-                OutlinedTextField(
-                    value, onChange, label = { Text(label) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-                )
-            }
+            SliderField("Loan amount (NPR)", principal, SliderRange.AMOUNT, 0) { principal = it }
+            SliderField("Interest rate (% per year)", rate, SliderRange.RATE, 1) { rate = it }
+            SliderField(
+                "Tenure (${unit.label.lowercase()})", months,
+                if (unit == TenureUnit.YEARS) SliderRange(1f, 30f) else SliderRange.TENURE, 0,
+            ) { months = it }
             Row(Modifier.padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TenureUnit.values().forEach { u ->
                     FilterChip(selected = unit == u, onClick = { unit = u }, label = { Text(u.label) })
@@ -160,6 +158,7 @@ fun EmiScreen() {
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
             Button(
+                shape = CircleShape,
                 onClick = {
                     updateLoans(SavedLoans.add(loans, SavedLoan(loanName, SavedInputs(principal, rate, months, unit))))
                     loanName = ""
@@ -264,5 +263,25 @@ private fun ScheduleRowView(cells: List<String>, bold: Boolean = false, descript
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+    }
+}
+
+@Composable
+private fun SliderField(
+    label: String, value: String, range: SliderRange, decimals: Int, onChange: (String) -> Unit,
+) {
+    Column(Modifier.padding(bottom = 8.dp)) {
+        OutlinedTextField(
+            value, onChange, label = { Text(label) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Slider(
+            value = range.position(value),
+            onValueChange = { onChange(range.text(it, decimals)) },
+            valueRange = range.min..range.max,
+            modifier = Modifier.semantics { contentDescription = "$label slider" },
+        )
     }
 }
