@@ -20,4 +20,12 @@ class ScheduleTableTest {
             assertEquals("1,000", ScheduleTable.cells(ScheduleRow(1, 1000.0, 0.0, 0.0))[1])
         } finally { java.util.Locale.setDefault(old) }
     }
+
+    @Test fun descriptionIsSpokenSentence() {
+        val row = ScheduleRow(1, 1234.4, 89.6, 9876543.0)
+        assertEquals(
+            "Month 1, principal 1,234, interest 90, balance 9,876,543",
+            ScheduleTable.description(row),
+        )
+    }
 }

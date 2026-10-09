@@ -7,6 +7,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +15,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.LocalContext
@@ -24,10 +30,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
         )
-        setContent { MaterialTheme { EmiScreen() } }
+        setContent {
+            MaterialTheme(colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()) {
+                EmiScreen()
+            }
+        }
     }
 }
 
@@ -130,11 +140,13 @@ fun EmiScreen() {
                         }
                     }
                 } else {
-                    Text("Enter valid positive values for both loans", color = MaterialTheme.colorScheme.error)
+                    Text("Enter valid positive values for both loans", color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
             }
             if (result == null) {
-                Text("Enter valid positive values", color = MaterialTheme.colorScheme.error)
+                Text("Enter valid positive values", color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
             } else {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
@@ -147,7 +159,8 @@ fun EmiScreen() {
                     Text("Interest saved: NPR %,.2f (%d months shorter)".format(prepayment.interestSaved, prepayment.monthsSaved),
                         style = MaterialTheme.typography.titleMedium)
                 } else if (prepay.isNotBlank()) {
-                    Text("Enter a valid prepayment and month within the tenure", color = MaterialTheme.colorScheme.error)
+                    Text("Enter a valid prepayment and month within the tenure", color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
                 Spacer(Modifier.height(12.dp))
                 Text("Schedule", style = MaterialTheme.typography.titleMedium)
@@ -158,15 +171,18 @@ fun EmiScreen() {
             }
             }
             items(if (result == null) emptyList() else schedule) { row ->
-                ScheduleRowView(ScheduleTable.cells(row))
+                ScheduleRowView(ScheduleTable.cells(row), description = ScheduleTable.description(row))
             }
         }
     }
 }
 
 @Composable
-private fun ScheduleRowView(cells: List<String>, bold: Boolean = false) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+private fun ScheduleRowView(cells: List<String>, bold: Boolean = false, description: String? = null) {
+    val rowModifier = if (description != null) {
+        Modifier.clearAndSetSemantics { contentDescription = description }
+    } else Modifier
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp).then(rowModifier)) {
         cells.forEachIndexed { i, text ->
             Text(
                 text, Modifier.weight(if (i == 0) 0.7f else 1.2f), maxLines = 1, softWrap = false,
