@@ -1,5 +1,6 @@
 package com.sabin.emicalculator
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
@@ -23,10 +25,24 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmiScreen() {
-    var principal by remember { mutableStateOf("500000") }
-    var rate by remember { mutableStateOf("12") }
-    var months by remember { mutableStateOf("60") }
-    var unit by remember { mutableStateOf(TenureUnit.MONTHS) }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("emi_inputs", Context.MODE_PRIVATE) }
+    val saved = remember {
+        SavedInputs.parse(
+            prefs.getString("principal", null), prefs.getString("rate", null),
+            prefs.getString("tenure", null), prefs.getString("unit", null),
+        )
+    }
+    var principal by remember { mutableStateOf(saved.principal) }
+    var rate by remember { mutableStateOf(saved.rate) }
+    var months by remember { mutableStateOf(saved.tenure) }
+    var unit by remember { mutableStateOf(saved.unit) }
+    LaunchedEffect(principal, rate, months, unit) {
+        prefs.edit()
+            .putString("principal", principal).putString("rate", rate)
+            .putString("tenure", months).putString("unit", unit.name)
+            .apply()
+    }
 
     val p = principal.toDoubleOrNull(); val r = rate.toDoubleOrNull(); val n = unit.parseToMonths(months)
     val result = runCatching { Emi.calculate(p!!, r!!, n!!) }.getOrNull()
