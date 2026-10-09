@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">EMI Calculator</string>
+    <string name="widget_description">Next EMI due date and debt-free countdown</string>
 </resources>

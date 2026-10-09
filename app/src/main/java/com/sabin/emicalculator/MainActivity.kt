@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
@@ -83,11 +84,13 @@ fun EmiScreen() {
     }
 
     val loansPrefs = remember { context.getSharedPreferences("emi_loans", Context.MODE_PRIVATE) }
+    val scope = rememberCoroutineScope()
     var loans by remember { mutableStateOf(SavedLoans.deserialize(loansPrefs.getString("loans", null))) }
     var loanName by remember { mutableStateOf("") }
     fun updateLoans(new: List<SavedLoan>) {
         loans = new
-        loansPrefs.edit().putString("loans", SavedLoans.serialize(new)).apply()
+        loansPrefs.edit().putString(EmiWidget.LOANS_KEY, SavedLoans.serialize(new)).apply()
+        scope.launch { EmiWidget.refresh(context) }
     }
 
     val p = principal.toDoubleOrNull(); val r = rate.toDoubleOrNull(); val n = unit.parseToMonths(months)
