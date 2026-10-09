@@ -201,6 +201,7 @@ fun EmiScreen() {
                             Column(Modifier.weight(1f)) {
                                 Text(loan.name, fontWeight = FontWeight.Bold)
                                 Text(if (emi != null) "EMI " + HeroFormat.money(emi) else "Invalid loan")
+                                PayoffSection(loan, onMarkPaid = { updateLoans(SavedLoans.markPaid(loans, index)) })
                             }
                             TextButton(onClick = { updateLoans(SavedLoans.removeAt(loans, index)) }) { Text("Delete") }
                         }
@@ -364,4 +365,53 @@ internal fun SliderField(
             modifier = Modifier.semantics { contentDescription = "$label slider" },
         )
     }
+}
+
+@Composable
+private fun PayoffSection(loan: SavedLoan, onMarkPaid: () -> Unit) {
+    val progress = PayoffProgress.of(loan.inputs, loan.paidMonths) ?: return
+    val percent = (progress.fractionPaid * 100).toInt()
+    val done = progress.monthsLeft == 0
+    var celebrate by remember { mutableStateOf<Int?>(null) }
+    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        val ringColor = MaterialTheme.colorScheme.primary
+        val trackColor = MaterialTheme.colorScheme.surfaceVariant
+        Canvas(Modifier.size(48.dp).padding(4.dp).semantics { contentDescription = "$percent% of principal paid" }) {
+            val stroke = Stroke(width = 6.dp.toPx(), cap = StrokeCap.Round)
+            drawArc(trackColor, 0f, 360f, false, style = stroke)
+            drawArc(ringColor, -90f, (progress.fractionPaid * 360).toFloat(), false, style = stroke)
+        }
+        Spacer(Modifier.width(8.dp))
+        Column {
+            Text("$percent% paid · ${progress.paidMonths}/${progress.totalMonths} months")
+            Text(
+                if (done) "Debt free! \uD83C\uDF89"
+                else "${progress.monthsLeft} months left · debt-free " +
+                    PayoffProgress.debtFreeDate(java.time.LocalDate.now(), progress.monthsLeft)
+                        .format(java.time.format.DateTimeFormatter.ofPattern("MMM yyyy")),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+    val badges = PayoffProgress.milestones(progress.fractionPaid)
+    if (badges.isNotEmpty()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            badges.forEach { AssistChip(onClick = {}, label = { Text("$it%") }) }
+        }
+    }
+    celebrate?.let { m ->
+        Text(
+            if (m == 100) "Congratulations, loan fully paid! \uD83C\uDF89" else "Milestone reached: $m% paid! \uD83C\uDF8A",
+            color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        )
+    }
+    TextButton(
+        enabled = !done,
+        onClick = {
+            val next = PayoffProgress.of(loan.inputs, PayoffProgress.markPaid(loan.inputs, loan.paidMonths))
+            celebrate = next?.let { PayoffProgress.newMilestone(progress.fractionPaid, it.fractionPaid) }
+            onMarkPaid()
+        },
+    ) { Text("Mark this month paid") }
 }

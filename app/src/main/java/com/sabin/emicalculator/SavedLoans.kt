@@ -1,11 +1,11 @@
 package com.sabin.emicalculator
 
-data class SavedLoan(val name: String, val inputs: SavedInputs)
+data class SavedLoan(val name: String, val inputs: SavedInputs, val paidMonths: Int = 0)
 
 /** Pure list operations and text serialization for saved loans (one tab-separated record per line). */
 object SavedLoans {
     fun serialize(loans: List<SavedLoan>): String = loans.joinToString("\n") {
-        listOf(escape(it.name), it.inputs.principal, it.inputs.rate, it.inputs.tenure, it.inputs.unit.name)
+        listOf(escape(it.name), it.inputs.principal, it.inputs.rate, it.inputs.tenure, it.inputs.unit.name, it.paidMonths.toString())
             .joinToString("\t")
     }
 
@@ -13,11 +13,11 @@ object SavedLoans {
     fun deserialize(text: String?): List<SavedLoan> =
         text.orEmpty().lines().mapNotNull { line ->
             val f = line.split("\t")
-            if (f.size != 5 || f[0].isBlank()) return@mapNotNull null
+            if ((f.size != 5 && f.size != 6) || f[0].isBlank()) return@mapNotNull null
             val unit = TenureUnit.values().firstOrNull { it.name == f[4] } ?: return@mapNotNull null
             val inputs = SavedInputs.parse(f[1], f[2], f[3], f[4])
             val valid = listOf(f[1], f[2], f[3]).all { it.toDoubleOrNull()?.let { v -> v.isFinite() && v > 0 } == true }
-            if (valid) SavedLoan(unescape(f[0]), inputs.copy(unit = unit)) else null
+            if (valid) SavedLoan(unescape(f[0]), inputs.copy(unit = unit), f.getOrNull(5)?.toIntOrNull()?.coerceAtLeast(0) ?: 0) else null
         }
 
     /** Adds a loan; an existing loan with the same name (case-insensitive) is replaced in place. Blank names are ignored. */
@@ -30,6 +30,12 @@ object SavedLoans {
 
     fun removeAt(loans: List<SavedLoan>, index: Int): List<SavedLoan> =
         if (index in loans.indices) loans.filterIndexed { i, _ -> i != index } else loans
+
+    /** Marks one more month paid for the loan at [index], capped at its tenure. */
+    fun markPaid(loans: List<SavedLoan>, index: Int): List<SavedLoan> =
+        loans.mapIndexed { i, l ->
+            if (i == index) l.copy(paidMonths = PayoffProgress.markPaid(l.inputs, l.paidMonths)) else l
+        }
 
     private fun escape(s: String) = buildString {
         for (c in s) when (c) {
