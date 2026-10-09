@@ -30,7 +30,14 @@ fun EmiScreen() {
 
     val p = principal.toDoubleOrNull(); val r = rate.toDoubleOrNull(); val n = unit.parseToMonths(months)
     val result = runCatching { Emi.calculate(p!!, r!!, n!!) }.getOrNull()
-    val schedule = if (result != null) Emi.schedule(p!!, r!!, n!!) else emptyList()
+    
+    var prepay by remember { mutableStateOf("") }
+    var prepayMonth by remember { mutableStateOf("12") }
+    val prepayment = if (result != null) prepay.toDoubleOrNull()?.takeIf { it > 0 }?.let { amt ->
+        runCatching { Emi.withPrepayment(p!!, r!!, n!!, amt, prepayMonth.toInt()) }.getOrNull()
+    } else null
+
+    val schedule = prepayment?.schedule ?: if (result != null) Emi.schedule(p!!, r!!, n!!) else emptyList()
 
     var compare by remember { mutableStateOf(false) }
     var principal2 by remember { mutableStateOf("500000") }
@@ -59,6 +66,16 @@ fun EmiScreen() {
                     FilterChip(selected = unit == u, onClick = { unit = u }, label = { Text(u.label) })
                 }
             }
+            OutlinedTextField(
+                prepay, { prepay = it }, label = { Text("Prepayment (NPR, optional)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+            OutlinedTextField(
+                prepayMonth, { prepayMonth = it }, label = { Text("Prepayment after month #") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Switch(checked = compare, onCheckedChange = { compare = it })
                 Spacer(Modifier.width(8.dp))
@@ -98,6 +115,12 @@ fun EmiScreen() {
                         Text("Total interest: NPR %,.2f".format(result.totalInterest))
                         Text("Total payment: NPR %,.2f".format(result.totalPayment))
                     }
+                }
+                if (prepayment != null) {
+                    Text("Interest saved: NPR %,.2f (%d months shorter)".format(prepayment.interestSaved, prepayment.monthsSaved),
+                        style = MaterialTheme.typography.titleMedium)
+                } else if (prepay.isNotBlank()) {
+                    Text("Enter a valid prepayment and month within the tenure", color = MaterialTheme.colorScheme.error)
                 }
                 Spacer(Modifier.height(12.dp))
                 Text("Schedule", style = MaterialTheme.typography.titleMedium)
