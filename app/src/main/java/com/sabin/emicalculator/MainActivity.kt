@@ -163,6 +163,10 @@ fun EmiScreen() {
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
                 Spacer(Modifier.height(12.dp))
+                DonutChart(ChartData.shares(p!!, result.totalInterest))
+                Spacer(Modifier.height(12.dp))
+                BalanceLineChart(ChartData.yearlyBalance(p, schedule))
+                Spacer(Modifier.height(12.dp))
                 Text("Schedule", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
                 ScheduleRowView(ScheduleTable.HEADER, bold = true)
