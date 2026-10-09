@@ -7,6 +7,8 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -199,8 +201,7 @@ fun EmiScreen() {
                     }
                 }
                 if (prepayment != null) {
-                    Text("Interest saved: NPR %,.2f (%d months shorter)".format(prepayment.interestSaved, prepayment.monthsSaved),
-                        style = MaterialTheme.typography.titleMedium)
+                    SavingsCard(prepayment.interestSaved, prepayment.monthsSaved)
                 } else if (prepay.isNotBlank()) {
                     Text("Enter a valid prepayment and month within the tenure", color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
@@ -221,6 +222,24 @@ fun EmiScreen() {
                 ScheduleRowView(ScheduleTable.cells(row), description = ScheduleTable.description(row))
             }
         }
+    }
+}
+
+@Composable
+private fun SavingsCard(interestSaved: Double, monthsSaved: Int) {
+    val context = LocalContext.current
+    val animationsOn = android.provider.Settings.Global.getFloat(
+        context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+    val progress = remember { Animatable(if (animationsOn) 0f else 1f) }
+    LaunchedEffect(interestSaved, monthsSaved) {
+        if (animationsOn) { progress.snapTo(0f); progress.animateTo(1f, tween(1000)) }
+    }
+    Card(Modifier.fillMaxWidth().semantics {
+        contentDescription = PrepaymentSavings.message(interestSaved, monthsSaved, 1f)
+        liveRegion = LiveRegionMode.Polite
+    }) {
+        Text(PrepaymentSavings.message(interestSaved, monthsSaved, progress.value),
+            Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
     }
 }
 
