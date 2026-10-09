@@ -91,6 +91,7 @@ fun EmiScreen() {
         loans = new
         loansPrefs.edit().putString(EmiWidget.LOANS_KEY, SavedLoans.serialize(new)).apply()
         scope.launch { EmiWidget.refresh(context) }
+        ReminderAlarm.reschedule(context)
     }
 
     val p = principal.toDoubleOrNull(); val r = rate.toDoubleOrNull(); val n = unit.parseToMonths(months)
@@ -205,6 +206,7 @@ fun EmiScreen() {
                                 Text(loan.name, fontWeight = FontWeight.Bold)
                                 Text(if (emi != null) "EMI " + HeroFormat.money(emi) else "Invalid loan")
                                 PayoffSection(loan, onMarkPaid = { updateLoans(SavedLoans.markPaid(loans, index)) })
+                                ReminderSection(loan.reminder, onChange = { updateLoans(SavedLoans.setReminder(loans, index, it)) })
                             }
                             TextButton(onClick = { updateLoans(SavedLoans.removeAt(loans, index)) }) { Text("Delete") }
                         }
@@ -417,4 +419,49 @@ private fun PayoffSection(loan: SavedLoan, onMarkPaid: () -> Unit) {
             onMarkPaid()
         },
     ) { Text("Mark this month paid") }
+}
+
+@Composable
+private fun ReminderSection(reminder: Reminder?, onChange: (Reminder?) -> Unit) {
+    val context = LocalContext.current
+    var explain by remember { mutableStateOf(false) }
+    val enable = { onChange(Reminder(java.time.LocalDate.now().dayOfMonth)) }
+    val permission = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { enable() } // Reminders are saved either way; the OS just hides them if notifications are denied.
+
+    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Text("Remind me before EMI is due", Modifier.weight(1f))
+        Switch(checked = reminder != null, onCheckedChange = { on -> if (on) explain = true else onChange(null) })
+    }
+    if (reminder != null) {
+        Stepper("Due day of month", reminder.dueDay, Reminder.DUE_DAYS) { onChange(reminder.copy(dueDay = it)) }
+        Stepper("Remind days before", reminder.daysBefore, Reminder.DAYS_BEFORE) { onChange(reminder.copy(daysBefore = it)) }
+    }
+    if (explain) {
+        AlertDialog(
+            onDismissRequest = { explain = false },
+            title = { Text("Allow reminders?") },
+            text = { Text("We\'ll send at most one notification a day, a couple of days before an EMI is due. Android needs your permission to show it. You can turn this off any time.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    explain = false
+                    val needs = android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(
+                        context, android.Manifest.permission.POST_NOTIFICATIONS,
+                    ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                    if (needs) permission.launch(android.Manifest.permission.POST_NOTIFICATIONS) else enable()
+                }) { Text("Continue") }
+            },
+            dismissButton = { TextButton(onClick = { explain = false }) { Text("Not now") } },
+        )
+    }
+}
+
+@Composable
+private fun Stepper(label: String, value: Int, range: IntRange, onChange: (Int) -> Unit) {
+    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Text("$label: $value", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+        TextButton(enabled = value > range.first, onClick = { onChange(value - 1) }) { Text("−") }
+        TextButton(enabled = value < range.last, onClick = { onChange(value + 1) }) { Text("+") }
+    }
 }
