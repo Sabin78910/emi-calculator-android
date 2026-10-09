@@ -1,7 +1,10 @@
 package com.sabin.emicalculator
 
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -11,6 +14,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -18,6 +23,10 @@ import androidx.compose.ui.unit.dp
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+        )
         setContent { MaterialTheme { EmiScreen() } }
     }
 }
@@ -65,7 +74,9 @@ fun EmiScreen() {
     }.getOrNull() else null
 
     Scaffold(topBar = { TopAppBar(title = { Text("EMI Calculator") }) }) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp)) {
+        LazyColumn(Modifier.padding(padding), contentPadding = PaddingValues(16.dp)) {
+            item {
+            Column {
             listOf(
                 Triple("Loan amount (NPR)", principal) { v: String -> principal = v },
                 Triple("Interest rate (% per year)", rate) { v: String -> rate = v },
@@ -140,13 +151,29 @@ fun EmiScreen() {
                 }
                 Spacer(Modifier.height(12.dp))
                 Text("Schedule", style = MaterialTheme.typography.titleMedium)
-                LazyColumn {
-                    items(schedule) { row ->
-                        Text("#%d  principal %,.0f  interest %,.0f  balance %,.0f"
-                            .format(row.month, row.principal, row.interest, row.balance))
-                    }
-                }
+                Spacer(Modifier.height(4.dp))
+                ScheduleRowView(ScheduleTable.HEADER, bold = true)
+                HorizontalDivider()
             }
+            }
+            }
+            items(if (result == null) emptyList() else schedule) { row ->
+                ScheduleRowView(ScheduleTable.cells(row))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScheduleRowView(cells: List<String>, bold: Boolean = false) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+        cells.forEachIndexed { i, text ->
+            Text(
+                text, Modifier.weight(if (i == 0) 0.7f else 1.2f), maxLines = 1, softWrap = false,
+                textAlign = if (i == 0) TextAlign.Start else TextAlign.End,
+                fontWeight = if (bold) FontWeight.Bold else null,
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }
