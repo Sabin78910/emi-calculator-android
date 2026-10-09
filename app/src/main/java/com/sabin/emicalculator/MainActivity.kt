@@ -8,7 +8,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.layout.*
@@ -165,40 +172,37 @@ fun EmiScreen() {
                 },
                 enabled = result != null && loanName.isNotBlank(),
             ) { Text("Save loan") }
-            if (loans.isNotEmpty()) {
-                Spacer(Modifier.height(12.dp))
-                Text("Saved loans", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(12.dp))
+            Text("Saved loans", style = MaterialTheme.typography.titleMedium)
+            if (loans.isEmpty()) {
+                EmptyLoans()
+            } else {
                 loans.forEachIndexed { index, loan ->
                     val i = loan.inputs
                     val emi = runCatching {
                         Emi.calculate(i.principal.toDouble(), i.rate.toDouble(), i.unit.parseToMonths(i.tenure)!!).monthlyEmi
                     }.getOrNull()
-                    Row(
-                        Modifier.fillMaxWidth().clickable {
-                            principal = i.principal; rate = i.rate; months = i.tenure; unit = i.unit
-                        }.padding(vertical = 4.dp),
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ElevatedCard(
+                        onClick = { principal = i.principal; rate = i.rate; months = i.tenure; unit = i.unit },
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(loan.name, fontWeight = FontWeight.Bold)
-                            Text(if (emi != null) "EMI NPR %,.2f".format(emi) else "Invalid loan")
+                        Row(Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(loan.name, fontWeight = FontWeight.Bold)
+                                Text(if (emi != null) "EMI " + HeroFormat.money(emi) else "Invalid loan")
+                            }
+                            TextButton(onClick = { updateLoans(SavedLoans.removeAt(loans, index)) }) { Text("Delete") }
                         }
-                        TextButton(onClick = { updateLoans(SavedLoans.removeAt(loans, index)) }) { Text("Delete") }
                     }
                 }
-                Spacer(Modifier.height(12.dp))
             }
+            Spacer(Modifier.height(12.dp))
             if (result == null) {
                 Text("Enter valid positive values", color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
             } else {
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text("Monthly EMI: NPR %,.2f".format(result.monthlyEmi), style = MaterialTheme.typography.titleLarge)
-                        Text("Total interest: NPR %,.2f".format(result.totalInterest))
-                        Text("Total payment: NPR %,.2f".format(result.totalPayment))
-                    }
-                }
+                HeroCard(result, ChartData.shares(p!!, result.totalInterest))
                 TextButton(onClick = {
                     val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                         type = "text/plain"
@@ -213,8 +217,6 @@ fun EmiScreen() {
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
                 Spacer(Modifier.height(12.dp))
-                DonutChart(ChartData.shares(p!!, result.totalInterest))
-                Spacer(Modifier.height(12.dp))
                 BalanceLineChart(ChartData.yearlyBalance(p, schedule))
                 Spacer(Modifier.height(12.dp))
                 Text("Schedule", style = MaterialTheme.typography.titleMedium)
@@ -228,6 +230,74 @@ fun EmiScreen() {
                 ScheduleRowView(ScheduleTable.cells(row), description = ScheduleTable.description(row))
             }
         }
+    }
+}
+
+@Composable
+private fun animationsEnabled(): Boolean = android.provider.Settings.Global.getFloat(
+    LocalContext.current.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+
+@Composable
+private fun HeroCard(result: EmiResult, shares: Shares) {
+    val on = animationsEnabled()
+    val spring = spring<Float>(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow)
+    val emi = remember { Animatable(if (on) 0f else result.monthlyEmi.toFloat()) }
+    val sweep = remember { Animatable(if (on) 0f else shares.principalPercent.toFloat()) }
+    LaunchedEffect(result.monthlyEmi) { if (on) emi.animateTo(result.monthlyEmi.toFloat(), spring) else emi.snapTo(result.monthlyEmi.toFloat()) }
+    LaunchedEffect(shares) { if (on) sweep.animateTo(shares.principalPercent.toFloat(), spring) else sweep.snapTo(shares.principalPercent.toFloat()) }
+    val principalColor = MaterialTheme.colorScheme.primary
+    val interestColor = MaterialTheme.colorScheme.tertiary
+    ElevatedCard(
+        Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
+            contentDescription = HeroFormat.description(result) + ". " + ChartData.donutDescription(shares)
+            liveRegion = LiveRegionMode.Polite
+        },
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+    ) {
+        Column(Modifier.padding(20.dp).fillMaxWidth(), horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+            Text("Monthly EMI", style = MaterialTheme.typography.labelLarge)
+            Text(HeroFormat.money(emi.value.toDouble()), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(12.dp))
+            Canvas(Modifier.size(160.dp)) {
+                val stroke = 24.dp.toPx()
+                val arc = Size(size.width - stroke, size.height - stroke)
+                val top = Offset(stroke / 2, stroke / 2)
+                val p = sweep.value / 100f * 360f
+                drawArc(principalColor, -90f, p, false, top, arc, style = Stroke(stroke))
+                drawArc(interestColor, -90f + p, 360f - p, false, top, arc, style = Stroke(stroke))
+            }
+            Text(HeroFormat.legend(shares), style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text("Total interest", style = MaterialTheme.typography.labelMedium)
+                    Text(HeroFormat.money(result.totalInterest), fontWeight = FontWeight.SemiBold)
+                }
+                Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
+                    Text("Total payable", style = MaterialTheme.typography.labelMedium)
+                    Text(HeroFormat.money(result.totalPayment), fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyLoans() {
+    val color = MaterialTheme.colorScheme.outline
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+    ) {
+        Canvas(Modifier.size(72.dp).semantics { contentDescription = "Empty wallet illustration" }) {
+            val w = 6.dp.toPx()
+            drawRoundRect(color, Offset(w, size.height * 0.25f), Size(size.width - 2 * w, size.height * 0.6f),
+                androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()), style = Stroke(w))
+            drawLine(color, Offset(size.width * 0.6f, size.height * 0.55f), Offset(size.width * 0.8f, size.height * 0.55f),
+                w, StrokeCap.Round)
+        }
+        Text("No saved loans yet", style = MaterialTheme.typography.titleSmall)
+        Text("Name your loan above and tap Save loan", style = MaterialTheme.typography.bodySmall)
     }
 }
 
