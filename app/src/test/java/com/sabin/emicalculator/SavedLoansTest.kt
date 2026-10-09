@@ -46,4 +46,21 @@ class SavedLoansTest {
         assertEquals(listOf(car), SavedLoans.removeAt(listOf(home, car), 0))
         assertEquals(listOf(home, car), SavedLoans.removeAt(listOf(home, car), 5))
     }
+
+    @Test fun paidMonthsRoundTrip() {
+        val list = listOf(home.copy(paidMonths = 7), car)
+        assertEquals(list, SavedLoans.deserialize(SavedLoans.serialize(list)))
+    }
+
+    @Test fun legacyRecordsWithoutPaidMonthsLoad() {
+        assertEquals(listOf(car), SavedLoans.deserialize("Car\t800000\t11\t60\tMONTHS"))
+    }
+
+    @Test fun markPaidUpdatesOnlyThatLoanAndCapsAtTenure() {
+        val short = SavedLoan("Short", SavedInputs("1000", "10", "2", TenureUnit.MONTHS))
+        var l = SavedLoans.markPaid(listOf(home, short), 1)
+        l = SavedLoans.markPaid(l, 1)
+        l = SavedLoans.markPaid(l, 1)
+        assertEquals(listOf(home, short.copy(paidMonths = 2)), l)
+    }
 }
