@@ -200,6 +200,13 @@ fun EmiScreen() {
                         Text("Total payment: NPR %,.2f".format(result.totalPayment))
                     }
                 }
+                TextButton(onClick = {
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(android.content.Intent.EXTRA_TEXT, LoanSummary.text(result, n!!))
+                    }
+                    context.startActivity(android.content.Intent.createChooser(send, "Share loan summary"))
+                }) { Text("Share") }
                 if (prepayment != null) {
                     SavingsCard(prepayment.interestSaved, prepayment.monthsSaved)
                 } else if (prepay.isNotBlank()) {
