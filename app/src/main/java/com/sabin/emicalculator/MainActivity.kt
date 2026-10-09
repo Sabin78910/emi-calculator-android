@@ -7,6 +7,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -61,6 +62,14 @@ fun EmiScreen() {
             .putString("principal", principal).putString("rate", rate)
             .putString("tenure", months).putString("unit", unit.name)
             .apply()
+    }
+
+    val loansPrefs = remember { context.getSharedPreferences("emi_loans", Context.MODE_PRIVATE) }
+    var loans by remember { mutableStateOf(SavedLoans.deserialize(loansPrefs.getString("loans", null))) }
+    var loanName by remember { mutableStateOf("") }
+    fun updateLoans(new: List<SavedLoan>) {
+        loans = new
+        loansPrefs.edit().putString("loans", SavedLoans.serialize(new)).apply()
     }
 
     val p = principal.toDoubleOrNull(); val r = rate.toDoubleOrNull(); val n = unit.parseToMonths(months)
@@ -143,6 +152,40 @@ fun EmiScreen() {
                     Text("Enter valid positive values for both loans", color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
+            }
+            OutlinedTextField(
+                loanName, { loanName = it }, label = { Text("Loan name") }, singleLine = true,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+            Button(
+                onClick = {
+                    updateLoans(SavedLoans.add(loans, SavedLoan(loanName, SavedInputs(principal, rate, months, unit))))
+                    loanName = ""
+                },
+                enabled = result != null && loanName.isNotBlank(),
+            ) { Text("Save loan") }
+            if (loans.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Text("Saved loans", style = MaterialTheme.typography.titleMedium)
+                loans.forEachIndexed { index, loan ->
+                    val i = loan.inputs
+                    val emi = runCatching {
+                        Emi.calculate(i.principal.toDouble(), i.rate.toDouble(), i.unit.parseToMonths(i.tenure)!!).monthlyEmi
+                    }.getOrNull()
+                    Row(
+                        Modifier.fillMaxWidth().clickable {
+                            principal = i.principal; rate = i.rate; months = i.tenure; unit = i.unit
+                        }.padding(vertical = 4.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(loan.name, fontWeight = FontWeight.Bold)
+                            Text(if (emi != null) "EMI NPR %,.2f".format(emi) else "Invalid loan")
+                        }
+                        TextButton(onClick = { updateLoans(SavedLoans.removeAt(loans, index)) }) { Text("Delete") }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
             }
             if (result == null) {
                 Text("Enter valid positive values", color = MaterialTheme.colorScheme.error,
