@@ -112,7 +112,15 @@ fun EmiScreen() {
         runCatching { Emi.withPrepayment(p!!, r!!, n!!, amt, prepayMonth.toInt()) }.getOrNull()
     } else null
 
-    val schedule = prepayment?.schedule ?: if (result != null) Emi.schedule(p!!, r!!, n!!) else emptyList()
+    val changeMonthLabel = stringResource(R.string.rate_change_month)
+    val changeRateLabel = stringResource(R.string.rate_change_rate)
+    var changeMonth by remember { mutableStateOf("") }
+    var changeRate by remember { mutableStateOf("") }
+    val rateChange = if (result != null) changeRate.toDoubleOrNull()?.let { nr ->
+        runCatching { RateChange.apply(p!!, r!!, n!!, changeMonth.toInt(), nr) }.getOrNull()
+    } else null
+
+    val schedule = prepayment?.schedule ?: rateChange?.schedule ?: if (result != null) Emi.schedule(p!!, r!!, n!!) else emptyList()
 
     var compare by remember { mutableStateOf(false) }
     var principal2 by remember { mutableStateOf("500000") }
@@ -184,6 +192,18 @@ fun EmiScreen() {
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true, shape = FIELD_SHAPE,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+            OutlinedTextField(
+                changeMonth, { changeMonth = NumericInput.filter(it, false) }, label = { Text(stringResource(R.string.rate_change_month)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true, shape = FIELD_SHAPE,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics { contentDescription = changeMonthLabel }
+            )
+            OutlinedTextField(
+                changeRate, { changeRate = NumericInput.filter(it, true) }, label = { Text(stringResource(R.string.rate_change_rate)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true, shape = FIELD_SHAPE,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics { contentDescription = changeRateLabel }
             )
             Card(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
@@ -274,6 +294,13 @@ fun EmiScreen() {
                             Text(feeText); Text(costText); Text(rateText)
                         }
                     }
+                }
+                if (rateChange != null) {
+                    val rateChangeText = stringResource(R.string.rate_change_result, HeroFormat.money(rateChange.newEmi), HeroFormat.money(rateChange.totalInterest))
+                    Text(rateChangeText, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                } else if (changeRate.isNotBlank()) {
+                    Text(stringResource(R.string.invalid_rate_change), color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
                 if (prepayment != null) {
                     SavingsCard(prepayment.interestSaved, prepayment.monthsSaved)
