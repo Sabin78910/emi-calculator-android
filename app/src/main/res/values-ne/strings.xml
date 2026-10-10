@@ -95,4 +95,8 @@
     <string name="step_up_extra">समान EMI भन्दा थप ब्याज: %1$s</string>
     <string name="step_up_saved">समान EMI भन्दा बचत भएको ब्याज: %1$s</string>
     <string name="invalid_step_up">स्टेप-अप ०–५०%% र अन्तराल १–६० महिना प्रविष्ट गर्नुहोस्</string>
+    <string name="input_required">मान राख्नुहोस्</string>
+    <string name="input_invalid">मान्य संख्या राख्नुहोस्</string>
+    <string name="input_too_low">न्यूनतम %1$s हो</string>
+    <string name="input_too_high">अधिकतम %1$s हो</string>
 </resources>
