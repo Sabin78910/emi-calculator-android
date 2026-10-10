@@ -68,4 +68,7 @@
     <string name="chart_title">वर्षअनुसार बाँकी मूलधन (०–%1$d)</string>
     <string name="reminder_channel">EMI सम्झना</string>
     <string name="reminder_title">EMI तिर्ने समय नजिकियो</string>
+    <string name="share_schedule">तालिका साझा गर्नुहोस् (CSV)</string>
+    <string name="share_schedule_description">परिशोधन तालिकालाई CSV पाठका रूपमा साझा गर्नुहोस्</string>
+    <string name="share_schedule_chooser">परिशोधन तालिका साझा गर्नुहोस्</string>
 </resources>
