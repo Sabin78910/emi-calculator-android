@@ -172,7 +172,7 @@ fun EmiScreen() {
                 Text(stringResource(R.string.invalid_values), color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
             } else {
-                HeroCard(result, ChartData.shares(p!!, result.totalInterest))
+                HeroCard(result, ChartData.shares(p!!, result.totalInterest), n!!)
                 val shareChooser = stringResource(R.string.share_chooser)
                 TextButton(onClick = {
                     val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
@@ -446,7 +446,7 @@ private fun animationsEnabled(): Boolean = android.provider.Settings.Global.getF
     LocalContext.current.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
 
 @Composable
-private fun HeroCard(result: EmiResult, shares: Shares) {
+private fun HeroCard(result: EmiResult, shares: Shares, months: Int) {
     val on = animationsEnabled()
     val spring = spring<Float>(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow)
     val emi = remember { Animatable(if (on) 0f else result.monthlyEmi.toFloat()) }
@@ -475,6 +475,11 @@ private fun HeroCard(result: EmiResult, shares: Shares) {
                 drawArc(interestColor, -90f + p, 360f - p, false, top, arc, style = Stroke(stroke))
             }
             Text(HeroFormat.legend(shares), style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(8.dp))
+            AssistChip(onClick = {}, enabled = false,
+                label = { Text(HeroFormat.debtFreeChip(java.time.LocalDate.now(), months)) },
+                colors = AssistChipDefaults.assistChipColors(disabledLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    disabledContainerColor = MaterialTheme.colorScheme.secondary))
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
