@@ -5,7 +5,7 @@ import org.junit.Test
 
 class HeroFormatTest {
     @Test fun moneyGroupsAndRounds() {
-        assertEquals("NPR 1,234,567.50", HeroFormat.money(1234567.5))
+        assertEquals("NPR 12,34,567.50", HeroFormat.money(1234567.5))
         assertEquals("NPR 0.00", HeroFormat.money(0.0))
     }
 
@@ -30,5 +30,18 @@ class HeroFormatTest {
         assertEquals(
             "Monthly EMI NPR 1,000.00. Total interest NPR 200.00. Total payable NPR 1,200.00",
             HeroFormat.description(r))
+    }
+
+    @Test fun moneyUsesLakhCroreGrouping() {
+        assertEquals("NPR 999.00", HeroFormat.money(999.0))
+        assertEquals("NPR 1,000.00", HeroFormat.money(1000.0))
+        assertEquals("NPR 1,00,000.00", HeroFormat.money(100000.0))
+        assertEquals("NPR 1,00,00,000.00", HeroFormat.money(10000000.0))
+        assertEquals("NPR -12,345.60", HeroFormat.money(-12345.6))
+    }
+
+    @Test fun debtFreeChipShowsMonthYear() {
+        assertEquals("Debt-free Mar 2030",
+            HeroFormat.debtFreeChip(java.time.LocalDate.of(2025, 3, 15), 60))
     }
 }

@@ -20,3 +20,16 @@ class ThemeTest {
         assert(d.background != brandLightColorScheme().background)
     }
 }
+
+class FintechPaletteTest {
+    @Test fun lightSchemeHasNavyEmeraldAndGold() {
+        val s = brandLightColorScheme()
+        assertEquals(Color(BrandPalette.NAVY), s.onPrimaryContainer)
+        assertEquals(Color(BrandPalette.EMERALD), s.tertiary)
+        assertEquals(Color(BrandPalette.GOLD), s.secondary)
+    }
+
+    @Test fun darkSchemeUsesNavyBackground() {
+        assertEquals(Color(BrandPalette.NAVY), brandDarkColorScheme().background)
+    }
+}
