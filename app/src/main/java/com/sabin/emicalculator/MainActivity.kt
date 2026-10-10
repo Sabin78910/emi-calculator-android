@@ -114,39 +114,64 @@ fun EmiScreen() {
         LoanComparison.compare(LoanInput(p!!, r!!, n!!), LoanInput(p2!!, r2!!, n2!!))
     }.getOrNull() else null
 
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { LargeTopAppBar(title = { Text("EMI Calculator") }, scrollBehavior = scrollBehavior) },
+        topBar = { TopAppBar(title = { Text("EMI Calculator") }, scrollBehavior = scrollBehavior) },
     ) { padding ->
-        LazyColumn(Modifier.padding(padding), contentPadding = PaddingValues(16.dp)) {
+        LazyColumn(Modifier.padding(padding), contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp)) {
             item {
             Column {
+            if (result == null) {
+                Text("Enter valid positive values", color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            } else {
+                HeroCard(result, ChartData.shares(p!!, result.totalInterest))
+                TextButton(onClick = {
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(android.content.Intent.EXTRA_TEXT, LoanSummary.text(result, n!!))
+                    }
+                    context.startActivity(android.content.Intent.createChooser(send, "Share loan summary"))
+                }) { Text("Share") }
+            }
+            Spacer(Modifier.height(8.dp))
             SliderField("Loan amount (NPR)", principal, SliderRange.AMOUNT, 0) { principal = it }
             SliderField("Interest rate (% per year)", rate, SliderRange.RATE, 1) { rate = it }
             SliderField(
                 "Tenure (${unit.label.lowercase()})", months,
-                if (unit == TenureUnit.YEARS) SliderRange(1f, 30f) else SliderRange.TENURE, 0,
+                unit.sliderRange, 0,
             ) { months = it }
-            Row(Modifier.padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TenureUnit.values().forEach { u ->
-                    FilterChip(selected = unit == u, onClick = { unit = u }, label = { Text(u.label) })
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                TenureUnit.values().forEachIndexed { index, u ->
+                    SegmentedButton(
+                        selected = unit == u,
+                        onClick = {
+                            months = TenureUnit.convertText(months, unit, u)
+                            months2 = TenureUnit.convertText(months2, unit, u)
+                            unit = u
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(index, TenureUnit.values().size),
+                    ) { Text(u.label) }
                 }
             }
             OutlinedTextField(
-                prepay, { prepay = it }, label = { Text("Prepayment (NPR, optional)") },
+                prepay, { prepay = NumericInput.filter(it, true) }, label = { Text("Prepayment (NPR, optional)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true, shape = FIELD_SHAPE,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
             OutlinedTextField(
-                prepayMonth, { prepayMonth = it }, label = { Text("Prepayment after month #") },
+                prepayMonth, { prepayMonth = NumericInput.filter(it, false) }, label = { Text("Prepayment after month #") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true, shape = FIELD_SHAPE,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Switch(checked = compare, onCheckedChange = { compare = it })
-                Spacer(Modifier.width(8.dp))
-                Text("Compare with second loan")
+            Card(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text("Compare with second loan", Modifier.weight(1f))
+                    Switch(checked = compare, onCheckedChange = { compare = it })
+                }
             }
             if (compare) {
                 listOf(
@@ -155,8 +180,9 @@ fun EmiScreen() {
                     Triple("Loan 2 tenure (${unit.label.lowercase()})", months2) { v: String -> months2 = v },
                 ).forEach { (label, value, onChange) ->
                     OutlinedTextField(
-                        value, onChange, label = { Text(label) },
+                        value, { onChange(NumericInput.filter(it, true)) }, label = { Text(label) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true, shape = FIELD_SHAPE,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                     )
                 }
@@ -175,7 +201,7 @@ fun EmiScreen() {
                 }
             }
             OutlinedTextField(
-                loanName, { loanName = it }, label = { Text("Loan name") }, singleLine = true,
+                loanName, { loanName = it }, label = { Text("Loan name") }, singleLine = true, shape = FIELD_SHAPE,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
             Button(
@@ -214,18 +240,7 @@ fun EmiScreen() {
                 }
             }
             Spacer(Modifier.height(12.dp))
-            if (result == null) {
-                Text("Enter valid positive values", color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-            } else {
-                HeroCard(result, ChartData.shares(p!!, result.totalInterest))
-                TextButton(onClick = {
-                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(android.content.Intent.EXTRA_TEXT, LoanSummary.text(result, n!!))
-                    }
-                    context.startActivity(android.content.Intent.createChooser(send, "Share loan summary"))
-                }) { Text("Share") }
+            if (result != null) {
                 if (prepayment != null) {
                     SavingsCard(prepayment.interestSaved, prepayment.monthsSaved)
                 } else if (prepay.isNotBlank()) {
@@ -233,7 +248,7 @@ fun EmiScreen() {
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
                 Spacer(Modifier.height(12.dp))
-                BalanceLineChart(ChartData.yearlyBalance(p, schedule))
+                BalanceLineChart(ChartData.yearlyBalance(p!!, schedule))
                 Spacer(Modifier.height(12.dp))
                 Text("Schedule", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
@@ -358,9 +373,10 @@ internal fun SliderField(
 ) {
     Column(Modifier.padding(bottom = 8.dp)) {
         OutlinedTextField(
-            value, onChange, label = { Text(label) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            shape = MaterialTheme.shapes.large,
+            value, { onChange(NumericInput.filter(it, decimals > 0)) }, label = { Text(label) },
+            keyboardOptions = KeyboardOptions(keyboardType = if (decimals > 0) KeyboardType.Decimal else KeyboardType.Number),
+            singleLine = true,
+            shape = FIELD_SHAPE,
             modifier = Modifier.fillMaxWidth(),
         )
         Slider(
@@ -465,3 +481,5 @@ private fun Stepper(label: String, value: Int, range: IntRange, onChange: (Int) 
         TextButton(enabled = value < range.last, onClick = { onChange(value + 1) }) { Text("+") }
     }
 }
+
+private val FIELD_SHAPE = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
