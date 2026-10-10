@@ -71,4 +71,9 @@
     <string name="share_schedule">Share schedule (CSV)</string>
     <string name="share_schedule_description">Share amortization schedule as CSV text</string>
     <string name="share_schedule_chooser">Share amortization schedule</string>
+    <string name="processing_fee">Processing fee (% of loan, 0–10)</string>
+    <string name="invalid_fee">Enter a fee between 0 and 10%</string>
+    <string name="fee_amount_value">Processing fee: %1$s</string>
+    <string name="total_cost_value">Total cost (interest + fee): %1$s</string>
+    <string name="effective_rate_value">Effective annual rate: %1$s%%</string>
 </resources>

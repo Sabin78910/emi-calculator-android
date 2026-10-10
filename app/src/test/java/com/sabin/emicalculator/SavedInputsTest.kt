@@ -23,4 +23,10 @@ class SavedInputsTest {
     @Test fun nonFiniteRejected() {
         assertEquals(SavedInputs.DEFAULT, SavedInputs.parse("NaN", "Infinity", "NaN", null))
     }
+
+    @Test fun feeRestoredAndValidated() {
+        assertEquals("1.5", SavedInputs.parse("1000", "10", "12", "MONTHS", "1.5").fee)
+        assertEquals("0", SavedInputs.parse("1000", "10", "12", "MONTHS", "11").fee)
+        assertEquals("0", SavedInputs.parse("1000", "10", "12", "MONTHS", null).fee)
+    }
 }

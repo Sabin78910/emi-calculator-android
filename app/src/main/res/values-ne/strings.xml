@@ -71,4 +71,9 @@
     <string name="share_schedule">तालिका साझा गर्नुहोस् (CSV)</string>
     <string name="share_schedule_description">परिशोधन तालिकालाई CSV पाठका रूपमा साझा गर्नुहोस्</string>
     <string name="share_schedule_chooser">परिशोधन तालिका साझा गर्नुहोस्</string>
+    <string name="processing_fee">प्रशोधन शुल्क (ऋणको %, ०–१०)</string>
+    <string name="invalid_fee">० देखि १०% बीचको शुल्क प्रविष्ट गर्नुहोस्</string>
+    <string name="fee_amount_value">प्रशोधन शुल्क: %1$s</string>
+    <string name="total_cost_value">कुल लागत (ब्याज + शुल्क): %1$s</string>
+    <string name="effective_rate_value">प्रभावी वार्षिक दर: %1$s%%</string>
 </resources>
