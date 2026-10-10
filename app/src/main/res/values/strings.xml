@@ -83,4 +83,7 @@
     <string name="moratorium_months">Moratorium: interest-only months (optional)</string>
     <string name="moratorium_result">Interest-only payment: %1$s · EMI afterwards: %2$s · Extra interest versus no moratorium: %3$s</string>
     <string name="invalid_moratorium">Enter moratorium months shorter than the tenure</string>
+    <string name="flat_rate_input">Flat rate % (optional)</string>
+    <string name="flat_rate_result">Flat-rate EMI: %1$s · Equivalent reducing rate: %2$s%% · Your reducing rate equals a flat rate of %3$s%%</string>
+    <string name="invalid_flat_rate">Enter a valid flat rate</string>
 </resources>
