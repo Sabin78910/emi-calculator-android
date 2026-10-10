@@ -89,4 +89,10 @@
     <string name="implied_emi_input">सोधिएको EMI (अनुमानित दर पत्ता लगाउन)</string>
     <string name="implied_rate_result">अनुमानित वार्षिक दर: %1$s%% · कुल ब्याज: %2$s</string>
     <string name="invalid_implied_emi">अवधिभर ऋण रकम तिर्न पुग्ने EMI प्रविष्ट गर्नुहोस्</string>
+    <string name="step_up_percent">प्रत्येक अन्तरालमा स्टेप-अप %</string>
+    <string name="step_up_interval">स्टेप-अप अन्तराल (महिना)</string>
+    <string name="step_up_result">पहिलो EMI: %1$s · अन्तिम EMI: %2$s · कुल ब्याज: %3$s</string>
+    <string name="step_up_extra">समान EMI भन्दा थप ब्याज: %1$s</string>
+    <string name="step_up_saved">समान EMI भन्दा बचत भएको ब्याज: %1$s</string>
+    <string name="invalid_step_up">स्टेप-अप ०–५०%% र अन्तराल १–६० महिना प्रविष्ट गर्नुहोस्</string>
 </resources>

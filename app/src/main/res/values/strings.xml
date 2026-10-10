@@ -89,4 +89,10 @@
     <string name="implied_emi_input">Quoted EMI (to find implied rate)</string>
     <string name="implied_rate_result">Implied annual rate: %1$s%% · Total interest: %2$s</string>
     <string name="invalid_implied_emi">Enter an EMI that covers the loan amount over the tenure</string>
+    <string name="step_up_percent">Step-up % per interval</string>
+    <string name="step_up_interval">Step-up interval (months)</string>
+    <string name="step_up_result">First EMI: %1$s · Last EMI: %2$s · Total interest: %3$s</string>
+    <string name="step_up_extra">Extra interest vs flat EMI: %1$s</string>
+    <string name="step_up_saved">Interest saved vs flat EMI: %1$s</string>
+    <string name="invalid_step_up">Enter step-up 0–50%% and interval 1–60 months</string>
 </resources>
