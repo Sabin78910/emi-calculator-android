@@ -130,12 +130,13 @@ fun EmiScreen() {
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
             } else {
                 HeroCard(result, ChartData.shares(p!!, result.totalInterest))
+                val shareChooser = stringResource(R.string.share_chooser)
                 TextButton(onClick = {
                     val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(android.content.Intent.EXTRA_TEXT, LoanSummary.text(result, n!!))
                     }
-                    context.startActivity(android.content.Intent.createChooser(send, context.getString(R.string.share_chooser)))
+                    context.startActivity(android.content.Intent.createChooser(send, shareChooser))
                 }) { Text(stringResource(R.string.share)) }
             }
             Spacer(Modifier.height(8.dp))
@@ -419,7 +420,7 @@ private fun PayoffSection(loan: SavedLoan, onMarkPaid: (milestone: Boolean) -> U
                 if (done) stringResource(R.string.debt_free)
                 else stringResource(R.string.months_left, progress.monthsLeft,
                     PayoffProgress.debtFreeDate(java.time.LocalDate.now(), progress.monthsLeft)
-                        .format(java.time.format.DateTimeFormatter.ofPattern("MMM yyyy", java.util.Locale.getDefault()))),
+                        .format(java.time.format.DateTimeFormatter.ofPattern("MMM yyyy", androidx.compose.ui.platform.LocalLocale.current.platformLocale))),
                 style = MaterialTheme.typography.bodySmall,
             )
         }
