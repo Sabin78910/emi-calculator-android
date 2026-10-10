@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ReviewRequester(this).recordLaunch()
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
@@ -83,6 +84,7 @@ fun EmiScreen() {
             .apply()
     }
 
+    val reviews = remember { ReviewRequester(context) }
     val loansPrefs = remember { context.getSharedPreferences("emi_loans", Context.MODE_PRIVATE) }
     val scope = rememberCoroutineScope()
     var loans by remember { mutableStateOf(SavedLoans.deserialize(loansPrefs.getString("loans", null))) }
@@ -208,6 +210,7 @@ fun EmiScreen() {
                 shape = CircleShape,
                 onClick = {
                     updateLoans(SavedLoans.add(loans, SavedLoan(loanName, SavedInputs(principal, rate, months, unit))))
+                    (context as? android.app.Activity)?.let { reviews.maybeAsk(it, HappyMoment.LOAN_SAVED, hadError = result == null) }
                     loanName = ""
                 },
                 enabled = result != null && loanName.isNotBlank(),
@@ -231,7 +234,10 @@ fun EmiScreen() {
                             Column(Modifier.weight(1f)) {
                                 Text(loan.name, fontWeight = FontWeight.Bold)
                                 Text(if (emi != null) "EMI " + HeroFormat.money(emi) else "Invalid loan")
-                                PayoffSection(loan, onMarkPaid = { updateLoans(SavedLoans.markPaid(loans, index)) })
+                                PayoffSection(loan, onMarkPaid = { milestone ->
+                                    updateLoans(SavedLoans.markPaid(loans, index))
+                                    if (milestone) (context as? android.app.Activity)?.let { reviews.maybeAsk(it, HappyMoment.PAYMENT_MILESTONE, hadError = false) }
+                                })
                                 ReminderSection(loan.reminder, onChange = { updateLoans(SavedLoans.setReminder(loans, index, it)) })
                             }
                             TextButton(onClick = { updateLoans(SavedLoans.removeAt(loans, index)) }) { Text("Delete") }
@@ -389,7 +395,7 @@ internal fun SliderField(
 }
 
 @Composable
-private fun PayoffSection(loan: SavedLoan, onMarkPaid: () -> Unit) {
+private fun PayoffSection(loan: SavedLoan, onMarkPaid: (milestone: Boolean) -> Unit) {
     val progress = PayoffProgress.of(loan.inputs, loan.paidMonths) ?: return
     val percent = (progress.fractionPaid * 100).toInt()
     val done = progress.monthsLeft == 0
@@ -432,7 +438,7 @@ private fun PayoffSection(loan: SavedLoan, onMarkPaid: () -> Unit) {
         onClick = {
             val next = PayoffProgress.of(loan.inputs, PayoffProgress.markPaid(loan.inputs, loan.paidMonths))
             celebrate = next?.let { PayoffProgress.newMilestone(progress.fractionPaid, it.fractionPaid) }
-            onMarkPaid()
+            onMarkPaid(celebrate != null)
         },
     ) { Text("Mark this month paid") }
 }
