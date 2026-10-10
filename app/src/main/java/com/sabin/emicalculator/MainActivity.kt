@@ -18,6 +18,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -183,6 +185,18 @@ fun EmiScreen() {
                 }) { Text(stringResource(R.string.share)) }
             }
             Spacer(Modifier.height(8.dp))
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LoanPreset.ALL.forEach { preset ->
+                    AssistChip(
+                        onClick = {
+                            val i = preset.toInputs(unit)
+                            principal = i.principal; rate = i.rate; months = i.tenure
+                        },
+                        label = { Text(preset.label()) },
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    )
+                }
+            }
             SliderField(stringResource(R.string.loan_amount), principal, SliderRange.AMOUNT, 0) { principal = it }
             SliderField(stringResource(R.string.interest_rate), rate, SliderRange.RATE, 1) { rate = it }
             SliderField(
@@ -555,9 +569,20 @@ internal fun SliderField(
     label: String, value: String, range: SliderRange, decimals: Int, onChange: (String) -> Unit,
 ) {
     val sliderDescription = stringResource(R.string.slider_description, label)
+    val error = InputValidation.check(value, range)
+    val errorText = error?.let {
+        when (it) {
+            InputError.EMPTY -> stringResource(R.string.input_required)
+            InputError.INVALID -> stringResource(R.string.input_invalid)
+            InputError.TOO_LOW -> stringResource(R.string.input_too_low, range.text(range.min, decimals))
+            InputError.TOO_HIGH -> stringResource(R.string.input_too_high, range.text(range.max, decimals))
+        }
+    }
     Column(Modifier.padding(bottom = 8.dp)) {
         OutlinedTextField(
             value, { onChange(NumericInput.filter(it, decimals > 0)) }, label = { Text(label) },
+            isError = errorText != null,
+            supportingText = errorText?.let { { Text(it) } },
             keyboardOptions = KeyboardOptions(keyboardType = if (decimals > 0) KeyboardType.Decimal else KeyboardType.Number),
             singleLine = true,
             shape = FIELD_SHAPE,
