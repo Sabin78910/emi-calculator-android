@@ -536,7 +536,7 @@ private fun SavingsCard(interestSaved: Double, monthsSaved: Int) {
         context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
     val progress = remember { Animatable(if (animationsOn) 0f else 1f) }
     LaunchedEffect(interestSaved, monthsSaved) {
-        if (animationsOn) { progress.snapTo(0f); progress.animateTo(1f, tween(1000)) }
+        if (animationsOn) { progress.snapTo(0f); progress.animateTo(1f, spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow)) }
     }
     Card(Modifier.fillMaxWidth().semantics {
         contentDescription = PrepaymentSavings.message(interestSaved, monthsSaved, 1f)

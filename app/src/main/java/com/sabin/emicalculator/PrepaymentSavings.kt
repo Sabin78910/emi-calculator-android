@@ -5,7 +5,7 @@ object PrepaymentSavings {
     fun message(interestSaved: Double, monthsSaved: Int, progress: Float): String {
         val p = progress.coerceIn(0f, 1f).toDouble()
         val months = (monthsSaved * p).toInt()
-        return "You save NPR %,.2f interest and %d %s".format(
+        return "Save NPR %,.2f, finish %d %s early".format(
             interestSaved * p, months, if (months == 1) "month" else "months")
     }
 }
