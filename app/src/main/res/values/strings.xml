@@ -76,4 +76,8 @@
     <string name="fee_amount_value">Processing fee: %1$s</string>
     <string name="total_cost_value">Total cost (interest + fee): %1$s</string>
     <string name="effective_rate_value">Effective annual rate: %1$s%%</string>
+    <string name="rate_change_month">Rate changes after month #</string>
+    <string name="rate_change_rate">New interest rate (%)</string>
+    <string name="rate_change_result">New EMI: %1$s · Total interest: %2$s</string>
+    <string name="invalid_rate_change">Enter a new rate and a month within the tenure</string>
 </resources>

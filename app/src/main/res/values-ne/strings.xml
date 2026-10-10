@@ -76,4 +76,8 @@
     <string name="fee_amount_value">प्रशोधन शुल्क: %1$s</string>
     <string name="total_cost_value">कुल लागत (ब्याज + शुल्क): %1$s</string>
     <string name="effective_rate_value">प्रभावी वार्षिक दर: %1$s%%</string>
+    <string name="rate_change_month">दर महिना # पछि परिवर्तन</string>
+    <string name="rate_change_rate">नयाँ ब्याज दर (%)</string>
+    <string name="rate_change_result">नयाँ EMI: %1$s · कुल ब्याज: %2$s</string>
+    <string name="invalid_rate_change">नयाँ दर र अवधिभित्रको महिना प्रविष्ट गर्नुहोस्</string>
 </resources>
