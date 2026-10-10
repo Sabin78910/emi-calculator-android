@@ -2,9 +2,9 @@ package com.sabin.emicalculator
 
 import kotlin.math.roundToInt
 
-enum class TenureUnit(val label: String, val monthsPerUnit: Int) {
-    MONTHS("Months", 1),
-    YEARS("Years", 12);
+enum class TenureUnit(val monthsPerUnit: Int) {
+    MONTHS(1),
+    YEARS(12);
 
     fun toMonths(value: Double): Int = (value * monthsPerUnit).roundToInt()
 

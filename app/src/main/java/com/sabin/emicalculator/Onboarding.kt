@@ -1,15 +1,15 @@
 package com.sabin.emicalculator
 
-data class OnboardingPage(val title: String, val benefit: String, val isAction: Boolean = false)
+data class OnboardingPage(@androidx.annotation.StringRes val title: Int, @androidx.annotation.StringRes val benefit: Int, val isAction: Boolean = false)
 
 object Onboarding {
     const val PREFS = "emi_onboarding"
     const val KEY_DONE = "done"
 
     val PAGES = listOf(
-        OnboardingPage("Know your EMI", "See your monthly payment in seconds."),
-        OnboardingPage("Plan smarter", "Compare loans and see how prepaying saves interest."),
-        OnboardingPage("Try it now", "Move the sliders to calculate your first EMI.", isAction = true),
+        OnboardingPage(R.string.onboarding_title_1, R.string.onboarding_body_1),
+        OnboardingPage(R.string.onboarding_title_2, R.string.onboarding_body_2),
+        OnboardingPage(R.string.onboarding_title_3, R.string.onboarding_body_3, isAction = true),
     )
 
     /** [done] is the stored completion flag; absent or false means first run. */

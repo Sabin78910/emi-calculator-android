@@ -36,13 +36,13 @@ object ReminderAlarm {
     fun notifyDue(context: Context, today: LocalDate = LocalDate.now()) {
         val plan = ReminderSchedule.plan(loans(context), today)?.takeIf { it.date == today } ?: return
         val manager = context.getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(NotificationChannel(CHANNEL, "EMI reminders", NotificationManager.IMPORTANCE_DEFAULT))
+        manager.createNotificationChannel(NotificationChannel(CHANNEL, context.getString(R.string.reminder_channel), NotificationManager.IMPORTANCE_DEFAULT))
         val open = PendingIntent.getActivity(
             context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = android.app.Notification.Builder(context, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_popup_reminder)
-            .setContentTitle("EMI due soon")
+            .setContentTitle(context.getString(R.string.reminder_title))
             .setContentText(plan.loanNames.joinToString(", "))
             .setContentIntent(open)
             .setAutoCancel(true)

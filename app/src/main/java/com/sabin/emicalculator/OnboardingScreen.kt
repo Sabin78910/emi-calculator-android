@@ -1,5 +1,6 @@
 package com.sabin.emicalculator
 
+import androidx.compose.ui.res.stringResource
 import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -39,7 +40,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     Surface(Modifier.fillMaxSize()) {
         Column(Modifier.systemBarsPadding().padding(16.dp)) {
             Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.End) {
-                if (Onboarding.showSkip(pager.currentPage)) TextButton(onClick = ::finish) { Text("Skip") }
+                if (Onboarding.showSkip(pager.currentPage)) TextButton(onClick = ::finish) { Text(stringResource(R.string.skip)) }
             }
             HorizontalPager(pager, Modifier.weight(1f)) { i ->
                 val page = pages[i]
@@ -50,18 +51,18 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 ) {
                     Image(painterResource(ART[i]), contentDescription = null, Modifier.size(220.dp))
                     Spacer(Modifier.height(24.dp))
-                    Text(page.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                    Text(page.benefit, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
+                    Text(stringResource(page.title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(page.benefit), textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
                     if (page.isAction) {
                         Spacer(Modifier.height(16.dp))
-                        SliderField("Loan amount (NPR)", principal, SliderRange.AMOUNT, 0) { principal = it }
+                        SliderField(stringResource(R.string.loan_amount), principal, SliderRange.AMOUNT, 0) { principal = it }
                         val d = SavedInputs.DEFAULT
                         val emi = runCatching {
                             Emi.calculate(principal.toDouble(), d.rate.toDouble(), d.tenure.toDouble().toInt())
                         }.getOrNull()
                         if (emi != null) {
                             Text(
-                                "Monthly EMI ${HeroFormat.money(emi.monthlyEmi)}",
+                                stringResource(R.string.onboarding_emi, HeroFormat.money(emi.monthlyEmi)),
                                 style = MaterialTheme.typography.titleLarge,
                             )
                         }
@@ -71,7 +72,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             Button(
                 onClick = { if (pager.currentPage == pages.lastIndex) finish() else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(if (pager.currentPage == pages.lastIndex) "Continue to calculator" else "Next") }
+            ) { Text(stringResource(if (pager.currentPage == pages.lastIndex) R.string.continue_to_calculator else R.string.next)) }
         }
     }
 }
