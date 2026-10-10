@@ -140,6 +140,15 @@ fun EmiScreen() {
         ImpliedRate.annualRatePercent(p, impliedEmiValue, n)
     }.getOrNull() else null
 
+    val stepUpPercentLabel = stringResource(R.string.step_up_percent)
+    val stepUpIntervalLabel = stringResource(R.string.step_up_interval)
+    var stepUpPercent by remember { mutableStateOf("") }
+    var stepUpInterval by remember { mutableStateOf("12") }
+    val stepUp = if (result != null && stepUpPercent.isNotBlank()) {
+        val sp = stepUpPercent.toDoubleOrNull(); val si = stepUpInterval.toIntOrNull()
+        if (sp != null && si != null) runCatching { StepUp.calculate(p!!, r!!, n!!, sp, si) }.getOrNull() else null
+    } else null
+
     val schedule = prepayment?.schedule ?: rateChange?.schedule ?: moratoriumResult?.schedule ?: if (result != null) Emi.schedule(p!!, r!!, n!!) else emptyList()
 
     var compare by remember { mutableStateOf(false) }
@@ -242,6 +251,18 @@ fun EmiScreen() {
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true, shape = FIELD_SHAPE,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics { contentDescription = impliedEmiLabel }
+            )
+            OutlinedTextField(
+                stepUpPercent, { stepUpPercent = NumericInput.filter(it, true) }, label = { Text(stringResource(R.string.step_up_percent)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true, shape = FIELD_SHAPE,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics { contentDescription = stepUpPercentLabel }
+            )
+            OutlinedTextField(
+                stepUpInterval, { stepUpInterval = it.filter(Char::isDigit).take(2) }, label = { Text(stringResource(R.string.step_up_interval)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true, shape = FIELD_SHAPE,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics { contentDescription = stepUpIntervalLabel }
             )
             Card(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
@@ -368,6 +389,21 @@ fun EmiScreen() {
                     Text(impliedText, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 } else if (impliedEmi.isNotBlank()) {
                     Text(stringResource(R.string.invalid_implied_emi), color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                }
+                if (stepUp != null) {
+                    val diff = stepUp.interestDifference
+                    Text(
+                        stringResource(R.string.step_up_result, HeroFormat.money(stepUp.firstEmi), HeroFormat.money(stepUp.lastEmi), HeroFormat.money(stepUp.totalInterest)),
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                    Text(
+                        if (diff >= 0) stringResource(R.string.step_up_saved, HeroFormat.money(diff))
+                        else stringResource(R.string.step_up_extra, HeroFormat.money(-diff)),
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                } else if (stepUpPercent.isNotBlank()) {
+                    Text(stringResource(R.string.invalid_step_up), color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
                 if (prepayment != null) {
