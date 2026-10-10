@@ -80,4 +80,7 @@
     <string name="rate_change_rate">New interest rate (%)</string>
     <string name="rate_change_result">New EMI: %1$s · Total interest: %2$s</string>
     <string name="invalid_rate_change">Enter a new rate and a month within the tenure</string>
+    <string name="moratorium_months">Moratorium: interest-only months (optional)</string>
+    <string name="moratorium_result">Interest-only payment: %1$s · EMI afterwards: %2$s · Extra interest versus no moratorium: %3$s</string>
+    <string name="invalid_moratorium">Enter moratorium months shorter than the tenure</string>
 </resources>
