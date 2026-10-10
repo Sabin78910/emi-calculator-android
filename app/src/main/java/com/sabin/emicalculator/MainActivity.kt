@@ -259,6 +259,18 @@ fun EmiScreen() {
                 BalanceLineChart(ChartData.yearlyBalance(p!!, schedule))
                 Spacer(Modifier.height(12.dp))
                 Text(stringResource(R.string.schedule), style = MaterialTheme.typography.titleMedium)
+                val shareCsvChooser = stringResource(R.string.share_schedule_chooser)
+                val shareCsvDescription = stringResource(R.string.share_schedule_description)
+                TextButton(
+                    onClick = {
+                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_TEXT, ScheduleCsv.build(schedule))
+                        }
+                        context.startActivity(android.content.Intent.createChooser(send, shareCsvChooser))
+                    },
+                    modifier = Modifier.semantics { contentDescription = shareCsvDescription },
+                ) { Text(stringResource(R.string.share_schedule)) }
                 Spacer(Modifier.height(4.dp))
                 ScheduleRowView(ScheduleTable.HEADER, bold = true)
                 HorizontalDivider()

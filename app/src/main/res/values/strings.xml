@@ -68,4 +68,7 @@
     <string name="chart_title">Outstanding balance by year (0–%1$d)</string>
     <string name="reminder_channel">EMI reminders</string>
     <string name="reminder_title">EMI due soon</string>
+    <string name="share_schedule">Share schedule (CSV)</string>
+    <string name="share_schedule_description">Share amortization schedule as CSV text</string>
+    <string name="share_schedule_chooser">Share amortization schedule</string>
 </resources>
