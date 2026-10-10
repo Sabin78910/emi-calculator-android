@@ -46,6 +46,9 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
     lint {
         abortOnError = true
         warningsAsErrors = false
@@ -63,6 +66,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
+    implementation(libs.play.review.ktx)
     testImplementation(libs.junit)
     debugImplementation(libs.androidx.ui.tooling)
 }
