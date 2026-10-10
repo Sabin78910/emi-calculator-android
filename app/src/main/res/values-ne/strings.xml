@@ -80,4 +80,7 @@
     <string name="rate_change_rate">नयाँ ब्याज दर (%)</string>
     <string name="rate_change_result">नयाँ EMI: %1$s · कुल ब्याज: %2$s</string>
     <string name="invalid_rate_change">नयाँ दर र अवधिभित्रको महिना प्रविष्ट गर्नुहोस्</string>
+    <string name="moratorium_months">मोराटोरियम: ब्याज मात्र तिर्ने महिना (ऐच्छिक)</string>
+    <string name="moratorium_result">ब्याज मात्र भुक्तानी: %1$s · पछिको EMI: %2$s · मोराटोरियम नभएको तुलनामा थप ब्याज: %3$s</string>
+    <string name="invalid_moratorium">अवधिभन्दा छोटो मोराटोरियम महिना प्रविष्ट गर्नुहोस्</string>
 </resources>

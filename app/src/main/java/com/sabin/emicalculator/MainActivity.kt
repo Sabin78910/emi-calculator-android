@@ -120,7 +120,13 @@ fun EmiScreen() {
         runCatching { RateChange.apply(p!!, r!!, n!!, changeMonth.toInt(), nr) }.getOrNull()
     } else null
 
-    val schedule = prepayment?.schedule ?: rateChange?.schedule ?: if (result != null) Emi.schedule(p!!, r!!, n!!) else emptyList()
+    val moratoriumLabel = stringResource(R.string.moratorium_months)
+    var moratorium by remember { mutableStateOf("") }
+    val moratoriumResult = if (result != null) moratorium.toIntOrNull()?.takeIf { it > 0 }?.let { k ->
+        runCatching { Moratorium.apply(p!!, r!!, n!!, k) }.getOrNull()
+    } else null
+
+    val schedule = prepayment?.schedule ?: rateChange?.schedule ?: moratoriumResult?.schedule ?: if (result != null) Emi.schedule(p!!, r!!, n!!) else emptyList()
 
     var compare by remember { mutableStateOf(false) }
     var principal2 by remember { mutableStateOf("500000") }
@@ -204,6 +210,12 @@ fun EmiScreen() {
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true, shape = FIELD_SHAPE,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics { contentDescription = changeRateLabel }
+            )
+            OutlinedTextField(
+                moratorium, { moratorium = NumericInput.filter(it, false) }, label = { Text(stringResource(R.string.moratorium_months)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true, shape = FIELD_SHAPE,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics { contentDescription = moratoriumLabel }
             )
             Card(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
@@ -300,6 +312,16 @@ fun EmiScreen() {
                     Text(rateChangeText, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 } else if (changeRate.isNotBlank()) {
                     Text(stringResource(R.string.invalid_rate_change), color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                }
+                if (moratoriumResult != null) {
+                    val moratoriumText = stringResource(
+                        R.string.moratorium_result, HeroFormat.money(moratoriumResult.interestOnlyPayment),
+                        HeroFormat.money(moratoriumResult.postEmi), HeroFormat.money(moratoriumResult.extraInterest),
+                    )
+                    Text(moratoriumText, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                } else if (moratorium.isNotBlank() && moratorium != "0") {
+                    Text(stringResource(R.string.invalid_moratorium), color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
                 if (prepayment != null) {
