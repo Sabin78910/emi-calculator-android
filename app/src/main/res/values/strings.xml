@@ -86,4 +86,7 @@
     <string name="flat_rate_input">Flat rate % (optional)</string>
     <string name="flat_rate_result">Flat-rate EMI: %1$s · Equivalent reducing rate: %2$s%% · Your reducing rate equals a flat rate of %3$s%%</string>
     <string name="invalid_flat_rate">Enter a valid flat rate</string>
+    <string name="implied_emi_input">Quoted EMI (to find implied rate)</string>
+    <string name="implied_rate_result">Implied annual rate: %1$s%% · Total interest: %2$s</string>
+    <string name="invalid_implied_emi">Enter an EMI that covers the loan amount over the tenure</string>
 </resources>
