@@ -50,6 +50,7 @@ class EmiWidget : GlanceAppWidget() {
 
 @Composable
 private fun WidgetContent(state: WidgetState) {
+    val ctx = LocalContext.current
     Column(
         modifier = GlanceModifier.fillMaxSize()
             .background(GlanceTheme.colors.widgetBackground)
@@ -60,17 +61,17 @@ private fun WidgetContent(state: WidgetState) {
         val secondary = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp)
         when (state) {
             WidgetState.Empty -> {
-                Text("EMI Calculator", style = primary)
-                Text("Save a loan to track your next EMI", style = secondary)
+                Text(ctx.getString(R.string.app_name), style = primary)
+                Text(ctx.getString(R.string.widget_empty), style = secondary)
             }
             is WidgetState.Active -> {
                 Text(state.loanName, style = secondary)
                 Text(state.emi, style = primary)
                 if (state.done) {
-                    Text("Debt free! 🎉", style = secondary)
+                    Text(ctx.getString(R.string.widget_debt_free), style = secondary)
                 } else {
-                    Text("Next EMI due ${state.nextDue}", style = secondary)
-                    Text("${state.monthsLeft} months left · debt-free ${state.debtFree}", style = secondary)
+                    Text(ctx.getString(R.string.widget_next_due, state.nextDue), style = secondary)
+                    Text(ctx.getString(R.string.months_left, state.monthsLeft, state.debtFree), style = secondary)
                 }
             }
         }

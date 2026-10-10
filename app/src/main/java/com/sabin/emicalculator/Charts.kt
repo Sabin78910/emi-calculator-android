@@ -1,5 +1,6 @@
 package com.sabin.emicalculator
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +28,7 @@ fun DonutChart(shares: Shares, modifier: Modifier = Modifier) {
             drawArc(principalColor, -90f, sweep, false, Offset(inset, inset), arcSize, style = Stroke(stroke))
             drawArc(interestColor, -90f + sweep, 360f - sweep, false, Offset(inset, inset), arcSize, style = Stroke(stroke))
         }
-        Text("Principal %.0f%%  •  Interest %.0f%%".format(shares.principalPercent, shares.interestPercent),
+        Text(stringResource(R.string.chart_legend, "%.0f".format(shares.principalPercent), "%.0f".format(shares.interestPercent)),
             style = MaterialTheme.typography.bodySmall)
     }
 }
@@ -49,6 +50,6 @@ fun BalanceLineChart(points: List<BalancePoint>, modifier: Modifier = Modifier) 
             }
             drawPath(path, lineColor, style = Stroke(4.dp.toPx()))
         }
-        Text("Outstanding balance by year (0–${points.last().year})", style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.chart_title, points.last().year), style = MaterialTheme.typography.bodySmall)
     }
 }

@@ -1,5 +1,6 @@
 package com.sabin.emicalculator
 
+import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
@@ -119,13 +120,13 @@ fun EmiScreen() {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { TopAppBar(title = { Text("EMI Calculator") }, scrollBehavior = scrollBehavior) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }, scrollBehavior = scrollBehavior) },
     ) { padding ->
         LazyColumn(Modifier.padding(padding), contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp)) {
             item {
             Column {
             if (result == null) {
-                Text("Enter valid positive values", color = MaterialTheme.colorScheme.error,
+                Text(stringResource(R.string.invalid_values), color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
             } else {
                 HeroCard(result, ChartData.shares(p!!, result.totalInterest))
@@ -134,14 +135,14 @@ fun EmiScreen() {
                         type = "text/plain"
                         putExtra(android.content.Intent.EXTRA_TEXT, LoanSummary.text(result, n!!))
                     }
-                    context.startActivity(android.content.Intent.createChooser(send, "Share loan summary"))
-                }) { Text("Share") }
+                    context.startActivity(android.content.Intent.createChooser(send, context.getString(R.string.share_chooser)))
+                }) { Text(stringResource(R.string.share)) }
             }
             Spacer(Modifier.height(8.dp))
-            SliderField("Loan amount (NPR)", principal, SliderRange.AMOUNT, 0) { principal = it }
-            SliderField("Interest rate (% per year)", rate, SliderRange.RATE, 1) { rate = it }
+            SliderField(stringResource(R.string.loan_amount), principal, SliderRange.AMOUNT, 0) { principal = it }
+            SliderField(stringResource(R.string.interest_rate), rate, SliderRange.RATE, 1) { rate = it }
             SliderField(
-                "Tenure (${unit.label.lowercase()})", months,
+                stringResource(if (unit == TenureUnit.YEARS) R.string.tenure_years else R.string.tenure_months), months,
                 unit.sliderRange, 0,
             ) { months = it }
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
@@ -154,32 +155,32 @@ fun EmiScreen() {
                             unit = u
                         },
                         shape = SegmentedButtonDefaults.itemShape(index, TenureUnit.values().size),
-                    ) { Text(u.label) }
+                    ) { Text(stringResource(if (u == TenureUnit.YEARS) R.string.unit_years else R.string.unit_months)) }
                 }
             }
             OutlinedTextField(
-                prepay, { prepay = NumericInput.filter(it, true) }, label = { Text("Prepayment (NPR, optional)") },
+                prepay, { prepay = NumericInput.filter(it, true) }, label = { Text(stringResource(R.string.prepayment_amount)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true, shape = FIELD_SHAPE,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
             OutlinedTextField(
-                prepayMonth, { prepayMonth = NumericInput.filter(it, false) }, label = { Text("Prepayment after month #") },
+                prepayMonth, { prepayMonth = NumericInput.filter(it, false) }, label = { Text(stringResource(R.string.prepayment_month)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true, shape = FIELD_SHAPE,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
             Card(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text("Compare with second loan", Modifier.weight(1f))
+                    Text(stringResource(R.string.compare_second), Modifier.weight(1f))
                     Switch(checked = compare, onCheckedChange = { compare = it })
                 }
             }
             if (compare) {
                 listOf(
-                    Triple("Loan 2 amount (NPR)", principal2) { v: String -> principal2 = v },
-                    Triple("Loan 2 rate (% per year)", rate2) { v: String -> rate2 = v },
-                    Triple("Loan 2 tenure (${unit.label.lowercase()})", months2) { v: String -> months2 = v },
+                    Triple(stringResource(R.string.loan2_amount), principal2) { v: String -> principal2 = v },
+                    Triple(stringResource(R.string.loan2_rate), rate2) { v: String -> rate2 = v },
+                    Triple(stringResource(if (unit == TenureUnit.YEARS) R.string.loan2_tenure_years else R.string.loan2_tenure_months), months2) { v: String -> months2 = v },
                 ).forEach { (label, value, onChange) ->
                     OutlinedTextField(
                         value, { onChange(NumericInput.filter(it, true)) }, label = { Text(label) },
@@ -191,19 +192,19 @@ fun EmiScreen() {
                 if (comparison != null) {
                     Card(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                         Column(Modifier.padding(16.dp)) {
-                            Text("Loan 1: EMI NPR %,.2f, interest NPR %,.2f".format(comparison.a.monthlyEmi, comparison.a.totalInterest))
-                            Text("Loan 2: EMI NPR %,.2f, interest NPR %,.2f".format(comparison.b.monthlyEmi, comparison.b.totalInterest))
-                            Text("Difference (2 − 1): EMI NPR %,.2f, interest NPR %,.2f".format(comparison.emiDifference, comparison.interestDifference),
+                            Text(stringResource(R.string.compare_loan1, "%,.2f".format(comparison.a.monthlyEmi), "%,.2f".format(comparison.a.totalInterest)))
+                            Text(stringResource(R.string.compare_loan2, "%,.2f".format(comparison.b.monthlyEmi), "%,.2f".format(comparison.b.totalInterest)))
+                            Text(stringResource(R.string.compare_diff, "%,.2f".format(comparison.emiDifference), "%,.2f".format(comparison.interestDifference)),
                                 style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 } else {
-                    Text("Enter valid positive values for both loans", color = MaterialTheme.colorScheme.error,
+                    Text(stringResource(R.string.invalid_both), color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
             }
             OutlinedTextField(
-                loanName, { loanName = it }, label = { Text("Loan name") }, singleLine = true, shape = FIELD_SHAPE,
+                loanName, { loanName = it }, label = { Text(stringResource(R.string.loan_name)) }, singleLine = true, shape = FIELD_SHAPE,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
             Button(
@@ -214,9 +215,9 @@ fun EmiScreen() {
                     loanName = ""
                 },
                 enabled = result != null && loanName.isNotBlank(),
-            ) { Text("Save loan") }
+            ) { Text(stringResource(R.string.save_loan)) }
             Spacer(Modifier.height(12.dp))
-            Text("Saved loans", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.saved_loans), style = MaterialTheme.typography.titleMedium)
             if (loans.isEmpty()) {
                 EmptyLoans()
             } else {
@@ -233,14 +234,14 @@ fun EmiScreen() {
                             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(loan.name, fontWeight = FontWeight.Bold)
-                                Text(if (emi != null) "EMI " + HeroFormat.money(emi) else "Invalid loan")
+                                Text(if (emi != null) stringResource(R.string.emi_value, HeroFormat.money(emi)) else stringResource(R.string.invalid_loan))
                                 PayoffSection(loan, onMarkPaid = { milestone ->
                                     updateLoans(SavedLoans.markPaid(loans, index))
                                     if (milestone) (context as? android.app.Activity)?.let { reviews.maybeAsk(it, HappyMoment.PAYMENT_MILESTONE, hadError = false) }
                                 })
                                 ReminderSection(loan.reminder, onChange = { updateLoans(SavedLoans.setReminder(loans, index, it)) })
                             }
-                            TextButton(onClick = { updateLoans(SavedLoans.removeAt(loans, index)) }) { Text("Delete") }
+                            TextButton(onClick = { updateLoans(SavedLoans.removeAt(loans, index)) }) { Text(stringResource(R.string.delete)) }
                         }
                     }
                 }
@@ -250,13 +251,13 @@ fun EmiScreen() {
                 if (prepayment != null) {
                     SavingsCard(prepayment.interestSaved, prepayment.monthsSaved)
                 } else if (prepay.isNotBlank()) {
-                    Text("Enter a valid prepayment and month within the tenure", color = MaterialTheme.colorScheme.error,
+                    Text(stringResource(R.string.invalid_prepayment), color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
                 Spacer(Modifier.height(12.dp))
                 BalanceLineChart(ChartData.yearlyBalance(p!!, schedule))
                 Spacer(Modifier.height(12.dp))
-                Text("Schedule", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.schedule), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
                 ScheduleRowView(ScheduleTable.HEADER, bold = true)
                 HorizontalDivider()
@@ -292,7 +293,7 @@ private fun HeroCard(result: EmiResult, shares: Shares) {
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
     ) {
         Column(Modifier.padding(20.dp).fillMaxWidth(), horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-            Text("Monthly EMI", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.monthly_emi), style = MaterialTheme.typography.labelLarge)
             Text(HeroFormat.money(emi.value.toDouble()), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(12.dp))
             Canvas(Modifier.size(160.dp)) {
@@ -307,11 +308,11 @@ private fun HeroCard(result: EmiResult, shares: Shares) {
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("Total interest", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.total_interest), style = MaterialTheme.typography.labelMedium)
                     Text(HeroFormat.money(result.totalInterest), fontWeight = FontWeight.SemiBold)
                 }
                 Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
-                    Text("Total payable", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.total_payable), style = MaterialTheme.typography.labelMedium)
                     Text(HeroFormat.money(result.totalPayment), fontWeight = FontWeight.SemiBold)
                 }
             }
@@ -321,20 +322,21 @@ private fun HeroCard(result: EmiResult, shares: Shares) {
 
 @Composable
 private fun EmptyLoans() {
+    val walletDescription = stringResource(R.string.empty_wallet)
     val color = MaterialTheme.colorScheme.outline
     Column(
         Modifier.fillMaxWidth().padding(vertical = 16.dp),
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
     ) {
-        Canvas(Modifier.size(72.dp).semantics { contentDescription = "Empty wallet illustration" }) {
+        Canvas(Modifier.size(72.dp).semantics { contentDescription = walletDescription }) {
             val w = 6.dp.toPx()
             drawRoundRect(color, Offset(w, size.height * 0.25f), Size(size.width - 2 * w, size.height * 0.6f),
                 androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()), style = Stroke(w))
             drawLine(color, Offset(size.width * 0.6f, size.height * 0.55f), Offset(size.width * 0.8f, size.height * 0.55f),
                 w, StrokeCap.Round)
         }
-        Text("No saved loans yet", style = MaterialTheme.typography.titleSmall)
-        Text("Name your loan above and tap Save loan", style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.no_saved_loans), style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.no_saved_loans_hint), style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -377,6 +379,7 @@ private fun ScheduleRowView(cells: List<String>, bold: Boolean = false, descript
 internal fun SliderField(
     label: String, value: String, range: SliderRange, decimals: Int, onChange: (String) -> Unit,
 ) {
+    val sliderDescription = stringResource(R.string.slider_description, label)
     Column(Modifier.padding(bottom = 8.dp)) {
         OutlinedTextField(
             value, { onChange(NumericInput.filter(it, decimals > 0)) }, label = { Text(label) },
@@ -389,7 +392,7 @@ internal fun SliderField(
             value = range.position(value),
             onValueChange = { onChange(range.text(it, decimals)) },
             valueRange = range.min..range.max,
-            modifier = Modifier.semantics { contentDescription = "$label slider" },
+            modifier = Modifier.semantics { contentDescription = sliderDescription },
         )
     }
 }
@@ -399,23 +402,24 @@ private fun PayoffSection(loan: SavedLoan, onMarkPaid: (milestone: Boolean) -> U
     val progress = PayoffProgress.of(loan.inputs, loan.paidMonths) ?: return
     val percent = (progress.fractionPaid * 100).toInt()
     val done = progress.monthsLeft == 0
+    val paidDescription = stringResource(R.string.percent_principal_paid, percent)
     var celebrate by remember { mutableStateOf<Int?>(null) }
     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         val ringColor = MaterialTheme.colorScheme.primary
         val trackColor = MaterialTheme.colorScheme.surfaceVariant
-        Canvas(Modifier.size(48.dp).padding(4.dp).semantics { contentDescription = "$percent% of principal paid" }) {
+        Canvas(Modifier.size(48.dp).padding(4.dp).semantics { contentDescription = paidDescription }) {
             val stroke = Stroke(width = 6.dp.toPx(), cap = StrokeCap.Round)
             drawArc(trackColor, 0f, 360f, false, style = stroke)
             drawArc(ringColor, -90f, (progress.fractionPaid * 360).toFloat(), false, style = stroke)
         }
         Spacer(Modifier.width(8.dp))
         Column {
-            Text("$percent% paid · ${progress.paidMonths}/${progress.totalMonths} months")
+            Text(stringResource(R.string.paid_progress, percent, progress.paidMonths, progress.totalMonths))
             Text(
-                if (done) "Debt free! \uD83C\uDF89"
-                else "${progress.monthsLeft} months left · debt-free " +
+                if (done) stringResource(R.string.debt_free)
+                else stringResource(R.string.months_left, progress.monthsLeft,
                     PayoffProgress.debtFreeDate(java.time.LocalDate.now(), progress.monthsLeft)
-                        .format(java.time.format.DateTimeFormatter.ofPattern("MMM yyyy")),
+                        .format(java.time.format.DateTimeFormatter.ofPattern("MMM yyyy", java.util.Locale.getDefault()))),
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -428,7 +432,7 @@ private fun PayoffSection(loan: SavedLoan, onMarkPaid: (milestone: Boolean) -> U
     }
     celebrate?.let { m ->
         Text(
-            if (m == 100) "Congratulations, loan fully paid! \uD83C\uDF89" else "Milestone reached: $m% paid! \uD83C\uDF8A",
+            if (m == 100) stringResource(R.string.loan_paid) else stringResource(R.string.milestone, m),
             color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
@@ -440,7 +444,7 @@ private fun PayoffSection(loan: SavedLoan, onMarkPaid: (milestone: Boolean) -> U
             celebrate = next?.let { PayoffProgress.newMilestone(progress.fractionPaid, it.fractionPaid) }
             onMarkPaid(celebrate != null)
         },
-    ) { Text("Mark this month paid") }
+    ) { Text(stringResource(R.string.mark_paid)) }
 }
 
 @Composable
@@ -453,18 +457,18 @@ private fun ReminderSection(reminder: Reminder?, onChange: (Reminder?) -> Unit) 
     ) { enable() } // Reminders are saved either way; the OS just hides them if notifications are denied.
 
     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Text("Remind me before EMI is due", Modifier.weight(1f))
+        Text(stringResource(R.string.remind_me), Modifier.weight(1f))
         Switch(checked = reminder != null, onCheckedChange = { on -> if (on) explain = true else onChange(null) })
     }
     if (reminder != null) {
-        Stepper("Due day of month", reminder.dueDay, Reminder.DUE_DAYS) { onChange(reminder.copy(dueDay = it)) }
-        Stepper("Remind days before", reminder.daysBefore, Reminder.DAYS_BEFORE) { onChange(reminder.copy(daysBefore = it)) }
+        Stepper(stringResource(R.string.due_day), reminder.dueDay, Reminder.DUE_DAYS) { onChange(reminder.copy(dueDay = it)) }
+        Stepper(stringResource(R.string.remind_days_before), reminder.daysBefore, Reminder.DAYS_BEFORE) { onChange(reminder.copy(daysBefore = it)) }
     }
     if (explain) {
         AlertDialog(
             onDismissRequest = { explain = false },
-            title = { Text("Allow reminders?") },
-            text = { Text("We\'ll send at most one notification a day, a couple of days before an EMI is due. Android needs your permission to show it. You can turn this off any time.") },
+            title = { Text(stringResource(R.string.allow_reminders)) },
+            text = { Text(stringResource(R.string.reminders_explain)) },
             confirmButton = {
                 TextButton(onClick = {
                     explain = false
@@ -472,9 +476,9 @@ private fun ReminderSection(reminder: Reminder?, onChange: (Reminder?) -> Unit) 
                         context, android.Manifest.permission.POST_NOTIFICATIONS,
                     ) != android.content.pm.PackageManager.PERMISSION_GRANTED
                     if (needs) permission.launch(android.Manifest.permission.POST_NOTIFICATIONS) else enable()
-                }) { Text("Continue") }
+                }) { Text(stringResource(R.string.action_continue)) }
             },
-            dismissButton = { TextButton(onClick = { explain = false }) { Text("Not now") } },
+            dismissButton = { TextButton(onClick = { explain = false }) { Text(stringResource(R.string.not_now)) } },
         )
     }
 }
@@ -482,7 +486,7 @@ private fun ReminderSection(reminder: Reminder?, onChange: (Reminder?) -> Unit) 
 @Composable
 private fun Stepper(label: String, value: Int, range: IntRange, onChange: (Int) -> Unit) {
     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Text("$label: $value", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.stepper_value, label, value), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
         TextButton(enabled = value > range.first, onClick = { onChange(value - 1) }) { Text("−") }
         TextButton(enabled = value < range.last, onClick = { onChange(value + 1) }) { Text("+") }
     }
