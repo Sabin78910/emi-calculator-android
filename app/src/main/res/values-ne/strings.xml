@@ -86,4 +86,7 @@
     <string name="flat_rate_input">फ्ल्याट दर % (ऐच्छिक)</string>
     <string name="flat_rate_result">फ्ल्याट दरको EMI: %1$s · बराबर घट्दो ब्यालेन्स दर: %2$s%% · तपाईंको घट्दो दर फ्ल्याट दर %3$s%% सँग बराबर हुन्छ</string>
     <string name="invalid_flat_rate">मान्य फ्ल्याट दर प्रविष्ट गर्नुहोस्</string>
+    <string name="implied_emi_input">सोधिएको EMI (अनुमानित दर पत्ता लगाउन)</string>
+    <string name="implied_rate_result">अनुमानित वार्षिक दर: %1$s%% · कुल ब्याज: %2$s</string>
+    <string name="invalid_implied_emi">अवधिभर ऋण रकम तिर्न पुग्ने EMI प्रविष्ट गर्नुहोस्</string>
 </resources>
