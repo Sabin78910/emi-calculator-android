@@ -71,17 +71,18 @@ fun EmiScreen() {
     val saved = remember {
         SavedInputs.parse(
             prefs.getString("principal", null), prefs.getString("rate", null),
-            prefs.getString("tenure", null), prefs.getString("unit", null),
+            prefs.getString("tenure", null), prefs.getString("unit", null), prefs.getString("fee", null),
         )
     }
     var principal by remember { mutableStateOf(saved.principal) }
     var rate by remember { mutableStateOf(saved.rate) }
     var months by remember { mutableStateOf(saved.tenure) }
     var unit by remember { mutableStateOf(saved.unit) }
-    LaunchedEffect(principal, rate, months, unit) {
+    var fee by remember { mutableStateOf(saved.fee) }
+    LaunchedEffect(principal, rate, months, unit, fee) {
         prefs.edit()
             .putString("principal", principal).putString("rate", rate)
-            .putString("tenure", months).putString("unit", unit.name)
+            .putString("tenure", months).putString("unit", unit.name).putString("fee", fee)
             .apply()
     }
 
@@ -100,6 +101,11 @@ fun EmiScreen() {
     val p = principal.toDoubleOrNull(); val r = rate.toDoubleOrNull(); val n = unit.parseToMonths(months)
     val result = runCatching { Emi.calculate(p!!, r!!, n!!) }.getOrNull()
     
+    val feePercent = ProcessingFee.parse(fee)
+    val feeAmount = if (result != null && feePercent != null) ProcessingFee.amount(p!!, feePercent) else 0.0
+    val effectiveRate = if (result != null && feePercent != null && feePercent > 0)
+        ProcessingFee.effectiveRate(p!!, result.monthlyEmi, n!!, feePercent) else null
+
     var prepay by remember { mutableStateOf("") }
     var prepayMonth by remember { mutableStateOf("12") }
     val prepayment = if (result != null) prepay.toDoubleOrNull()?.takeIf { it > 0 }?.let { amt ->
@@ -160,6 +166,14 @@ fun EmiScreen() {
                 }
             }
             OutlinedTextField(
+                fee, { fee = NumericInput.filter(it, true) }, label = { Text(stringResource(R.string.processing_fee)) },
+                isError = feePercent == null,
+                supportingText = if (feePercent == null) ({ Text(stringResource(R.string.invalid_fee)) }) else null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true, shape = FIELD_SHAPE,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+            OutlinedTextField(
                 prepay, { prepay = NumericInput.filter(it, true) }, label = { Text(stringResource(R.string.prepayment_amount)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true, shape = FIELD_SHAPE,
@@ -211,7 +225,7 @@ fun EmiScreen() {
             Button(
                 shape = CircleShape,
                 onClick = {
-                    updateLoans(SavedLoans.add(loans, SavedLoan(loanName, SavedInputs(principal, rate, months, unit))))
+                    updateLoans(SavedLoans.add(loans, SavedLoan(loanName, SavedInputs(principal, rate, months, unit, fee))))
                     (context as? android.app.Activity)?.let { reviews.maybeAsk(it, HappyMoment.LOAN_SAVED, hadError = result == null) }
                     loanName = ""
                 },
@@ -228,7 +242,7 @@ fun EmiScreen() {
                         Emi.calculate(i.principal.toDouble(), i.rate.toDouble(), i.unit.parseToMonths(i.tenure)!!).monthlyEmi
                     }.getOrNull()
                     ElevatedCard(
-                        onClick = { principal = i.principal; rate = i.rate; months = i.tenure; unit = i.unit },
+                        onClick = { principal = i.principal; rate = i.rate; months = i.tenure; unit = i.unit; fee = i.fee },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     ) {
                         Row(Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp),
@@ -249,6 +263,18 @@ fun EmiScreen() {
             }
             Spacer(Modifier.height(12.dp))
             if (result != null) {
+                if (effectiveRate != null) {
+                    val feeText = stringResource(R.string.fee_amount_value, HeroFormat.money(feeAmount))
+                    val costText = stringResource(R.string.total_cost_value, HeroFormat.money(ProcessingFee.totalCost(result.totalInterest, feeAmount)))
+                    val rateText = stringResource(R.string.effective_rate_value, "%.2f".format(effectiveRate))
+                    Card(Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics(mergeDescendants = true) {
+                        contentDescription = "$feeText. $costText. $rateText"
+                    }) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text(feeText); Text(costText); Text(rateText)
+                        }
+                    }
+                }
                 if (prepayment != null) {
                     SavingsCard(prepayment.interestSaved, prepayment.monthsSaved)
                 } else if (prepay.isNotBlank()) {
