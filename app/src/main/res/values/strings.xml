@@ -113,4 +113,16 @@
     <string name="restore_merge">Merge</string>
     <string name="restore_replace">Replace</string>
     <string name="cancel">Cancel</string>
+    <string name="transfer_toggle">Loan transfer (refinance) check</string>
+    <string name="transfer_balance">Outstanding balance (NPR)</string>
+    <string name="transfer_current_rate">Current interest rate (% p.a.)</string>
+    <string name="transfer_new_rate">New interest rate (% p.a.)</string>
+    <string name="transfer_remaining_months">Remaining months on current loan</string>
+    <string name="transfer_new_months">New loan tenure (months)</string>
+    <string name="transfer_fee">Switching fee (NPR)</string>
+    <string name="transfer_fee_percent">Switching fee (% of balance)</string>
+    <string name="transfer_fee_is_percent">Enter fee as % of balance</string>
+    <string name="transfer_emi_line">EMI: now %1$s, new %2$s</string>
+    <string name="transfer_interest_line">Total interest: now %1$s, new %2$s</string>
+    <string name="transfer_description">Loan transfer result. Current EMI %1$s, new EMI %2$s</string>
 </resources>

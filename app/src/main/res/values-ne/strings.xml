@@ -113,4 +113,16 @@
     <string name="restore_merge">मर्ज</string>
     <string name="restore_replace">बदल्नुहोस्</string>
     <string name="cancel">रद्द गर्नुहोस्</string>
+    <string name="transfer_toggle">ऋण स्थानान्तरण (पुनर्वित्त) जाँच</string>
+    <string name="transfer_balance">बाँकी रकम (रु)</string>
+    <string name="transfer_current_rate">हालको ब्याजदर (% वार्षिक)</string>
+    <string name="transfer_new_rate">नयाँ ब्याजदर (% वार्षिक)</string>
+    <string name="transfer_remaining_months">हालको ऋणका बाँकी महिना</string>
+    <string name="transfer_new_months">नयाँ ऋणको अवधि (महिना)</string>
+    <string name="transfer_fee">स्थानान्तरण शुल्क (रु)</string>
+    <string name="transfer_fee_percent">स्थानान्तरण शुल्क (बाँकी रकमको %)</string>
+    <string name="transfer_fee_is_percent">शुल्क बाँकी रकमको % मा राख्नुहोस्</string>
+    <string name="transfer_emi_line">ईएमआई: अहिले %1$s, नयाँ %2$s</string>
+    <string name="transfer_interest_line">कुल ब्याज: अहिले %1$s, नयाँ %2$s</string>
+    <string name="transfer_description">ऋण स्थानान्तरण नतिजा। हालको ईएमआई %1$s, नयाँ ईएमआई %2$s</string>
 </resources>
