@@ -208,6 +208,20 @@ fun EmiScreen() {
         LoanComparison.compare(LoanInput(p!!, r!!, n!!), LoanInput(p2!!, r2!!, n2!!))
     }.getOrNull() else null
 
+    var transferOn by remember { mutableStateOf(false) }
+    var tBalance by remember { mutableStateOf("1000000") }
+    var tRate by remember { mutableStateOf("11") }
+    var tMonths by remember { mutableStateOf("120") }
+    var tNewRate by remember { mutableStateOf("9") }
+    var tNewMonths by remember { mutableStateOf("120") }
+    var tFee by remember { mutableStateOf("10000") }
+    var tFeeIsPercent by remember { mutableStateOf(false) }
+    val transfer = if (transferOn) runCatching {
+        val bal = tBalance.toDouble()
+        val feeAmount = tFee.toDouble().let { if (tFeeIsPercent) LoanTransfer.feeFromPercent(bal, it) else it }
+        LoanTransfer.calculate(bal, tRate.toDouble(), tMonths.toInt(), tNewRate.toDouble(), tNewMonths.toInt(), feeAmount)
+    }.getOrNull() else null
+
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -356,6 +370,33 @@ fun EmiScreen() {
                 } else {
                     Text(stringResource(R.string.invalid_both), color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                }
+            }
+            Card(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text(stringResource(R.string.transfer_toggle), Modifier.weight(1f))
+                    Switch(checked = transferOn, onCheckedChange = { transferOn = it })
+                }
+            }
+            if (transferOn) {
+                SliderField(stringResource(R.string.transfer_balance), tBalance, SliderRange.AMOUNT, 0) { tBalance = it }
+                SliderField(stringResource(R.string.transfer_current_rate), tRate, SliderRange.RATE, 1) { tRate = it }
+                SliderField(stringResource(R.string.transfer_new_rate), tNewRate, SliderRange.RATE, 1) { tNewRate = it }
+                TransferField(stringResource(R.string.transfer_remaining_months), tMonths, false) { tMonths = it }
+                TransferField(stringResource(R.string.transfer_new_months), tNewMonths, false) { tNewMonths = it }
+                TransferField(stringResource(if (tFeeIsPercent) R.string.transfer_fee_percent else R.string.transfer_fee), tFee, true) { tFee = it }
+                val feeToggleLabel = stringResource(R.string.transfer_fee_is_percent)
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 8.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Text(feeToggleLabel, Modifier.weight(1f))
+                    Switch(checked = tFeeIsPercent, onCheckedChange = { tFeeIsPercent = it },
+                        modifier = Modifier.semantics { contentDescription = feeToggleLabel })
+                }
+                if (transfer != null) TransferCard(transfer) else {
+                    Text(stringResource(R.string.invalid_values), color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
             }
             OutlinedTextField(
@@ -593,6 +634,45 @@ private fun EmptyLoans() {
         }
         Text(stringResource(R.string.no_saved_loans), style = MaterialTheme.typography.titleSmall)
         Text(stringResource(R.string.no_saved_loans_hint), style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun TransferField(label: String, value: String, decimal: Boolean, onChange: (String) -> Unit) {
+    OutlinedTextField(
+        value, { onChange(NumericInput.filter(it, decimal)) }, label = { Text(label) },
+        keyboardOptions = KeyboardOptions(keyboardType = if (decimal) KeyboardType.Decimal else KeyboardType.Number),
+        singleLine = true, shape = FIELD_SHAPE,
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+    )
+}
+
+@Composable
+private fun TransferCard(r: LoanTransferResult) {
+    val on = animationsEnabled()
+    val progress = remember { Animatable(if (on) 0f else 1f) }
+    LaunchedEffect(r) { if (on) { progress.snapTo(0f); progress.animateTo(1f, spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow)) } }
+    val saves = r.netSaving > 0.005
+    val full = LoanTransfer.verdict(r)
+    val emerald = ComposeColor(BrandPalette.EMERALD)
+    val description = stringResource(R.string.transfer_description, HeroFormat.money(r.currentEmi), HeroFormat.money(r.newEmi)) + ". " + full
+    Card(Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics(mergeDescendants = true) {
+        contentDescription = description
+        liveRegion = LiveRegionMode.Polite
+    }) {
+        Column(Modifier.padding(16.dp)) {
+            Text(stringResource(R.string.transfer_emi_line, HeroFormat.money(r.currentEmi), HeroFormat.money(r.newEmi)),
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"))
+            Text(stringResource(R.string.transfer_interest_line, HeroFormat.money(r.currentInterest), HeroFormat.money(r.newInterest)),
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"))
+            Spacer(Modifier.height(8.dp))
+            Text(
+                LoanTransfer.verdict(r, progress.value),
+                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.Bold,
+                color = if (saves) emerald else MaterialTheme.colorScheme.onSurface,
+            )
+        }
     }
 }
 
