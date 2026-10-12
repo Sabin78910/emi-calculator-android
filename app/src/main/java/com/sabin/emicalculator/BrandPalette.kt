@@ -6,6 +6,8 @@ object BrandPalette {
     const val NAVY = 0xFF0B1B3F
     const val EMERALD = 0xFF10B981
     const val GOLD = 0xFFF5B301
+    /** Principal slice on the hero card: light indigo, readable on the deep indigo surface. */
+    const val HERO_PRINCIPAL = 0xFFC0C1FF
 
     object Light {
         const val primary = SEED
@@ -24,6 +26,8 @@ object BrandPalette {
         const val onSurface = 0xFF1B1B21
         const val surfaceVariant = 0xFFE4E1EC
         const val onSurfaceVariant = 0xFF46464F
+        const val heroSurface = 0xFF2B2A8C
+        const val onHero = 0xFFFFFFFF
     }
 
     object Dark {
@@ -43,5 +47,7 @@ object BrandPalette {
         const val onSurface = 0xFFE4E1E9
         const val surfaceVariant = 0xFF46464F
         const val onSurfaceVariant = 0xFFC7C5D0
+        const val heroSurface = 0xFF2A2D8F
+        const val onHero = 0xFFFFFFFF
     }
 }

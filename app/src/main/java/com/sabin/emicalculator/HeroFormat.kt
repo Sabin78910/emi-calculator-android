@@ -24,6 +24,9 @@ object HeroFormat {
     fun legend(s: Shares): String =
         "Principal ${s.principalPercent.roundToInt()}%  •  Interest ${s.interestPercent.roundToInt()}%"
 
+    /** Two-line label for the donut centre: the interest share of the total payment. */
+    fun donutCentre(s: Shares): String = "${s.interestPercent.roundToInt()}%\ninterest"
+
     fun description(r: EmiResult): String =
         "Monthly EMI ${money(r.monthlyEmi)}. Total interest ${money(r.totalInterest)}. Total payable ${money(r.totalPayment)}"
 }
