@@ -3,6 +3,10 @@ package com.sabin.emicalculator
 import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.graphics.Color
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
@@ -176,7 +180,7 @@ fun EmiScreen() {
             } else {
                 HeroCard(result, ChartData.shares(p!!, result.totalInterest), n!!)
                 val shareChooser = stringResource(R.string.share_chooser)
-                TextButton(onClick = {
+                FilledTonalButton(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(top = 8.dp), onClick = {
                     val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(android.content.Intent.EXTRA_TEXT, LoanSummary.text(result, n!!))
@@ -196,6 +200,7 @@ fun EmiScreen() {
                         modifier = Modifier.heightIn(min = 48.dp),
                     )
                 }
+                Spacer(Modifier.width(32.dp)) // trailing space so the row clearly scrolls
             }
             SliderField(stringResource(R.string.loan_amount), principal, SliderRange.AMOUNT, 0) { principal = it }
             SliderField(stringResource(R.string.interest_rate), rate, SliderRange.RATE, 1) { rate = it }
@@ -467,19 +472,24 @@ private fun HeroCard(result: EmiResult, shares: Shares, months: Int) {
     val sweep = remember { Animatable(if (on) 0f else shares.principalPercent.toFloat()) }
     LaunchedEffect(result.monthlyEmi) { if (on) emi.animateTo(result.monthlyEmi.toFloat(), spring) else emi.snapTo(result.monthlyEmi.toFloat()) }
     LaunchedEffect(shares) { if (on) sweep.animateTo(shares.principalPercent.toFloat(), spring) else sweep.snapTo(shares.principalPercent.toFloat()) }
-    val principalColor = MaterialTheme.colorScheme.primary
+    val principalColor = ComposeColor(BrandPalette.HERO_PRINCIPAL)
     val interestColor = MaterialTheme.colorScheme.tertiary
+    val heroSurface = if (isSystemInDarkTheme()) ComposeColor(BrandPalette.Dark.heroSurface) else ComposeColor(BrandPalette.Light.heroSurface)
+    val onHero = ComposeColor(BrandPalette.Light.onHero)
+    val centreText = HeroFormat.donutCentre(shares)
     ElevatedCard(
         Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
             contentDescription = HeroFormat.description(result) + ". " + ChartData.donutDescription(shares)
             liveRegion = LiveRegionMode.Polite
         },
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = heroSurface, contentColor = onHero),
     ) {
-        Column(Modifier.padding(20.dp).fillMaxWidth(), horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+        Column(Modifier.background(Brush.verticalGradient(listOf(heroSurface, ComposeColor(BrandPalette.NAVY)))).padding(20.dp).fillMaxWidth(), horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
             Text(stringResource(R.string.monthly_emi), style = MaterialTheme.typography.labelLarge)
             Text(HeroFormat.money(emi.value.toDouble()), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(12.dp))
+            Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
             Canvas(Modifier.size(160.dp)) {
                 val stroke = 24.dp.toPx()
                 val arc = Size(size.width - stroke, size.height - stroke)
@@ -488,12 +498,17 @@ private fun HeroCard(result: EmiResult, shares: Shares, months: Int) {
                 drawArc(principalColor, -90f, p, false, top, arc, style = Stroke(stroke))
                 drawArc(interestColor, -90f + p, 360f - p, false, top, arc, style = Stroke(stroke))
             }
+            Text(centreText, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            }
             Text(HeroFormat.legend(shares), style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(8.dp))
             AssistChip(onClick = {}, enabled = false,
-                label = { Text(HeroFormat.debtFreeChip(java.time.LocalDate.now(), months)) },
-                colors = AssistChipDefaults.assistChipColors(disabledLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    disabledContainerColor = MaterialTheme.colorScheme.secondary))
+                label = { Text(HeroFormat.debtFreeChip(java.time.LocalDate.now(), months), fontWeight = FontWeight.SemiBold) },
+                leadingIcon = { Text("★") },
+                colors = AssistChipDefaults.assistChipColors(
+                    disabledLabelColor = ComposeColor(BrandPalette.NAVY), disabledLeadingIconContentColor = ComposeColor(BrandPalette.NAVY),
+                    disabledContainerColor = ComposeColor(BrandPalette.GOLD)),
+                border = null)
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
@@ -592,7 +607,12 @@ internal fun SliderField(
             value = range.position(value),
             onValueChange = { onChange(range.text(it, decimals)) },
             valueRange = range.min..range.max,
-            modifier = Modifier.semantics { contentDescription = sliderDescription },
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).semantics { contentDescription = sliderDescription },
         )
     }
 }

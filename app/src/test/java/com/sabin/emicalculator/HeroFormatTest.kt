@@ -45,3 +45,8 @@ class HeroFormatTest {
             HeroFormat.debtFreeChip(java.time.LocalDate.of(2025, 3, 15), 60))
     }
 }
+
+class DonutCentreTest {
+    @Test fun centreShowsInterestShare() =
+        org.junit.Assert.assertEquals("38%\ninterest", HeroFormat.donutCentre(Shares(62.0, 38.0)))
+}

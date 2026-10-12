@@ -99,4 +99,5 @@
     <string name="input_invalid">Enter a valid number</string>
     <string name="input_too_low">Minimum is %1$s</string>
     <string name="input_too_high">Maximum is %1$s</string>
+    <string name="onboarding_page_of">Page %1$d of %2$d</string>
 </resources>

@@ -4,6 +4,10 @@ import androidx.compose.ui.res.stringResource
 import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -29,6 +33,8 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     val scope = rememberCoroutineScope()
     var principal by remember { mutableStateOf(SavedInputs.DEFAULT.principal) }
 
+    val pageOf = stringResource(R.string.onboarding_page_of, pager.currentPage + 1, pages.size)
+
     fun finish() {
         context.getSharedPreferences(Onboarding.PREFS, Context.MODE_PRIVATE)
             .edit().putBoolean(Onboarding.KEY_DONE, true).apply()
@@ -38,7 +44,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     }
 
     Surface(Modifier.fillMaxSize()) {
-        Column(Modifier.systemBarsPadding().padding(16.dp)) {
+        Column(Modifier.systemBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
             Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.End) {
                 if (Onboarding.showSkip(pager.currentPage)) TextButton(onClick = ::finish) { Text(stringResource(R.string.skip)) }
             }
@@ -49,7 +55,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Image(painterResource(ART[i]), contentDescription = null, Modifier.size(220.dp))
+                    Image(painterResource(ART[i]), contentDescription = null, Modifier.size(180.dp))
                     Spacer(Modifier.height(24.dp))
                     Text(stringResource(page.title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                     Text(stringResource(page.benefit), textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
@@ -67,6 +73,23 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                             )
                         }
                     }
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(bottom = 12.dp).semantics(mergeDescendants = true) {
+                    contentDescription = pageOf
+                },
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                repeat(pages.size) { i ->
+                    val selected = i == pager.currentPage
+                    Box(
+                        Modifier.padding(4.dp).height(8.dp).width(if (selected) 24.dp else 8.dp)
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                CircleShape,
+                            ),
+                    )
                 }
             }
             Button(
