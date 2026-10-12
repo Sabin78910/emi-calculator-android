@@ -100,4 +100,17 @@
     <string name="input_too_low">न्यूनतम %1$s हो</string>
     <string name="input_too_high">अधिकतम %1$s हो</string>
     <string name="onboarding_page_of">पृष्ठ %1$d मध्ये %2$d</string>
+    <string name="backup_loans">ब्याकअप</string>
+    <string name="restore_loans">पुनर्स्थापना</string>
+    <string name="backup_done">%1$d ऋणको ब्याकअप भयो</string>
+    <string name="backup_failed">ब्याकअप फाइल सुरक्षित गर्न सकिएन। अर्को स्थान रोज्नुहोस्।</string>
+    <string name="restore_done">%1$d ऋण पुनर्स्थापना भयो</string>
+    <string name="restore_read_failed">फाइल पढ्न सकिएन। फेरि रोज्नुहोस् वा अर्को स्थान प्रयास गर्नुहोस्।</string>
+    <string name="restore_corrupt">यो मान्य ऋण ब्याकअप होइन। केही परिवर्तन गरिएन।</string>
+    <string name="restore_version">यो ब्याकअप अर्को एप संस्करणको हो। केही परिवर्तन गरिएन।</string>
+    <string name="restore_choose_title">%1$d ऋण पुनर्स्थापना गर्ने?</string>
+    <string name="restore_choose_body">मर्ज गर्दा दोहोरिने बिना तपाईंका ऋणमा थपिन्छ। बदल्दा हालका ऋण हटाइन्छ।</string>
+    <string name="restore_merge">मर्ज</string>
+    <string name="restore_replace">बदल्नुहोस्</string>
+    <string name="cancel">रद्द गर्नुहोस्</string>
 </resources>

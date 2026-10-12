@@ -100,4 +100,17 @@
     <string name="input_too_low">Minimum is %1$s</string>
     <string name="input_too_high">Maximum is %1$s</string>
     <string name="onboarding_page_of">Page %1$d of %2$d</string>
+    <string name="backup_loans">Back up</string>
+    <string name="restore_loans">Restore</string>
+    <string name="backup_done">Backed up %1$d loans</string>
+    <string name="backup_failed">Could not save the backup file. Try a different location.</string>
+    <string name="restore_done">Restored %1$d loans</string>
+    <string name="restore_read_failed">Could not read that file. Pick it again or try another location.</string>
+    <string name="restore_corrupt">This is not a valid loan backup. Nothing was changed.</string>
+    <string name="restore_version">This backup comes from a different app version. Nothing was changed.</string>
+    <string name="restore_choose_title">Restore %1$d loans?</string>
+    <string name="restore_choose_body">Merge adds them to your saved loans without duplicates. Replace removes your current loans first.</string>
+    <string name="restore_merge">Merge</string>
+    <string name="restore_replace">Replace</string>
+    <string name="cancel">Cancel</string>
 </resources>
