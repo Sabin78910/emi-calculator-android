@@ -11,7 +11,9 @@ import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -102,6 +104,46 @@ fun EmiScreen() {
         loansPrefs.edit().putString(EmiWidget.LOANS_KEY, SavedLoans.serialize(new)).apply()
         scope.launch { EmiWidget.refresh(context) }
         ReminderAlarm.reschedule(context)
+    }
+
+    var backupMessage by remember { mutableStateOf<Pair<Int, Int?>?>(null) }
+    var pendingRestore by remember { mutableStateOf<List<SavedLoan>?>(null) }
+    val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) {
+            val saved = runCatching {
+                context.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(LoanBackup.encode(loans).toByteArray(Charsets.UTF_8)) }
+            }.isSuccess
+            backupMessage = if (saved) R.string.backup_done to loans.size else R.string.backup_failed to null
+        }
+    }
+    val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val text = runCatching { context.contentResolver.openInputStream(uri)!!.use { it.readBytes().toString(Charsets.UTF_8) } }.getOrNull()
+            when (val decoded = if (text == null) null else LoanBackup.decode(text)) {
+                null -> backupMessage = R.string.restore_read_failed to null
+                BackupResult.Failure.Corrupt -> backupMessage = R.string.restore_corrupt to null
+                BackupResult.Failure.UnsupportedVersion -> backupMessage = R.string.restore_version to null
+                is BackupResult.Success -> pendingRestore = decoded.loans
+            }
+        }
+    }
+    pendingRestore?.let { incoming ->
+        AlertDialog(
+            onDismissRequest = { pendingRestore = null },
+            title = { Text(stringResource(R.string.restore_choose_title, incoming.size)) },
+            text = { Text(stringResource(R.string.restore_choose_body)) },
+            confirmButton = {
+                Row {
+                    TextButton(modifier = Modifier.heightIn(min = 48.dp), onClick = {
+                        updateLoans(LoanBackup.merge(loans, incoming)); backupMessage = R.string.restore_done to incoming.size; pendingRestore = null
+                    }) { Text(stringResource(R.string.restore_merge)) }
+                    TextButton(modifier = Modifier.heightIn(min = 48.dp), onClick = {
+                        updateLoans(LoanBackup.merge(emptyList(), incoming)); backupMessage = R.string.restore_done to incoming.size; pendingRestore = null
+                    }) { Text(stringResource(R.string.restore_replace)) }
+                }
+            },
+            dismissButton = { TextButton(modifier = Modifier.heightIn(min = 48.dp), onClick = { pendingRestore = null }) { Text(stringResource(R.string.cancel)) } },
+        )
     }
 
     val p = principal.toDoubleOrNull(); val r = rate.toDoubleOrNull(); val n = unit.parseToMonths(months)
@@ -331,6 +373,16 @@ fun EmiScreen() {
             ) { Text(stringResource(R.string.save_loan)) }
             Spacer(Modifier.height(12.dp))
             Text(stringResource(R.string.saved_loans), style = MaterialTheme.typography.titleMedium)
+            Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(modifier = Modifier.heightIn(min = 48.dp), enabled = loans.isNotEmpty(),
+                    onClick = { backupLauncher.launch("emi-loans-backup.json") }) { Text(stringResource(R.string.backup_loans)) }
+                OutlinedButton(modifier = Modifier.heightIn(min = 48.dp),
+                    onClick = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) { Text(stringResource(R.string.restore_loans)) }
+            }
+            backupMessage?.let { (res, count) ->
+                Text(if (count != null) stringResource(res, count) else stringResource(res), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 4.dp)
+                    .semantics { liveRegion = LiveRegionMode.Polite })
+            }
             if (loans.isEmpty()) {
                 EmptyLoans()
             } else {
